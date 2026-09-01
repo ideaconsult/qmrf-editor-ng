@@ -1,6 +1,7 @@
 # Implementation Plan
 
-Status: **approved 2026-09-01; M0 (scaffold), M1 (schema + model) and M2 (IO + viewer) complete.** M3–M6 outstanding.
+Status: **approved 2026-09-01; M0 (scaffold), M1 (schema + model), M2 (IO + viewer) and M3 (shell)
+complete.** M4–M6 outstanding.
 
 What M1 changed about this plan, in one line each: the field kinds are **eight**, not five (see
 the correction in the Domain section); parsing and writing share one `src/qmrf/xml.js` instead of
@@ -15,6 +16,16 @@ the endpoint vocabulary is a **picker that mints one catalog entry per pick** ra
 every file; text fields store a whole escaped HTML document, so the envelope has one owner,
 `src/qmrf/html.js`; and a document with no XML element in it is an error banner rather than a blank
 viewer. Details in `AGENTS.md`.
+
+What M3 changed about this plan, in one line each: the **edit toggle moved to M4** — until field
+editors exist, `readOnly={false}` only enables New/Save, because a mode switch with nothing behind
+it is a control that lies; the shell is **two contexts** (`ViewerConfig` for the host's wishes,
+`EditorContext` for the open document) rather than props threaded through the tree; the outline is
+built by a new pure module, `src/qmrf/outline.js`, so chapter labels and per-part finding counts
+come from the document and the validator rather than from components; navigation **jumps by
+address** (`data-qmrf-path`, scoped to the report's own DOM node), and `''` is the document's own
+address; and a catalog is given its own `data-qmrf-path` and a uid-prefixed `id`, so an embedded
+viewer scrolls its own report and two embeds do not share anchors. Details in `AGENTS.md`.
 
 Naming settled during M0 in favour of the viewer role and this repo's folder: package
 `@ideaconsult/qmrf-viewer`, library global `QMRFViewer`, bundle `dist/qmrf-viewer.js`,
@@ -72,9 +83,9 @@ CI to satisfy: `pnpm install --frozen-lockfile` → `pnpm peers check` → `pnpm
 
 **M2 — IO + viewer.** `src/qmrf/newDocument.js` (skeleton generated from `spec.js`, so a fresh document validates with zero issues) + `src/qmrf/html.js` (the escaped-HTML envelope: `fieldHtml`/`plainText`/`wrapHtml`) + `src/qmrf/vocab/endpoints.js` (vendored `endpoints-source.xml`, 347 rows, parsed at first use; a picker, not a seed) + `src/qmrf/io.js` (the only browser I/O: `File.text`, `fetch` with a bearer token, download anchor, title-derived filename); open (picker + drag-drop), **fetch from `?url=`**, dirty tracking, download, `onSave` — all behind `src/hooks/useDocument.js`; `src/components/{ReportView,Toolbar}.jsx` and `src/components/fields/FieldView.jsx` — the read-only report, dispatched on `kind` and addressed by `data-qmrf-path`; `src/components/Html.jsx` for sanitized field HTML (`data-qmrf-target` on a pointer names the entry it cites, for M6's jump); fixtures `src/tests/fixtures/{qmrf-0.9-real.xml,qmrf-new-template.xml}` (the published JRC document, and upstream's template as the comparison the generator is measured against).
 
-**M3 — shell + edit.** `src/context/{EditorContext,ViewerConfig}.jsx`; `Sidebar`/`ChapterNav`/`CatalogNav` (10 chapters + 6 catalogs, per-chapter issue counts); `QMRFViewer.jsx` body with `readOnly` default and an edit toggle; `Header` with open/save/validate/dirty/undo/redo.
+**M3 — shell + edit.** Shipped as: `src/qmrf/outline.js` (pure outline + per-part counts); `src/context/{EditorContext,ViewerConfig}.jsx`; `src/components/Sidebar.jsx` — one `nav` listing the document, its chapters and its catalogs, each row a jump and a finding count (chapter and catalog nav are one list, not two components, because both are the document's own parts addressed the same way); `src/components/Header.jsx` — validation chip (click → worst first finding), undo/redo, `Toolbar`; `QMRFViewer.jsx` as layout: drop target, error banner, `Sidebar` beside the report. `data-qmrf-path` became the navigation key, `''` included. **The edit toggle is deferred to M4**, where it has something to switch on.
 
-**M4 — field editors** (`src/components/fields/`): `RichTextField` (contentEditable, DOMPurify on paste, toolbar limited to tags legacy HTML actually uses, writes the escaped-HTML envelope), `DateField`, `QuestionField` (Yes/No + All/Some/No/Unknown radios, and the 7-flag grid), `ReferenceField` (catalog multi-select → `*_ref idref catalog`), `AttachmentField` (`molecules`/`document`: url/embedded/filetype/description), `RepeatGroup` for chapters 5 and 7. Dispatch is metadata-driven off `spec.js` `kind`; each component renders the view variant too.
+**M4 — field editors** (`src/components/fields/`): `RichTextField` (contentEditable, DOMPurify on paste, toolbar limited to tags legacy HTML actually uses, writes the escaped-HTML envelope), `DateField`, `QuestionField` (Yes/No + All/Some/No/Unknown radios, and the 7-flag grid), `ReferenceField` (catalog multi-select → `*_ref idref catalog`), `AttachmentField` (`molecules`/`document`: url/embedded/filetype/description), `RepeatGroup` for chapters 5 and 7. Dispatch is metadata-driven off `spec.js` `kind`; each component renders the view variant too. Plus the **edit toggle** M3 left behind: it flips the dispatch between the view and edit variants of every field at once.
 
 **M5 — catalogs.** Six editable tables with ID minting; delete blocked with a reference list when an entry is `idref`-ed.
 

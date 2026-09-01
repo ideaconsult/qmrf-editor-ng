@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import ReportView from '../components/ReportView.jsx'
 import QMRFViewer from '../QMRFViewer.jsx'
@@ -98,10 +98,16 @@ describe('ReportView on the published document', () => {
 
   it('appends the six catalogs, without their internal id column', () => {
     const { container } = renderFixture()
+    /** @type {HTMLElement[]} */
     const catalogs = Array.from(container.querySelectorAll('.qmrf-catalog'))
     expect(catalogs).toHaveLength(SPEC.catalogs.length)
+    // Ids carry the viewer's uid, so two embeds in one host page do not share anchors, and each
+    // catalog carries its own address too — that is what the outline jumps by.
     expect(catalogs.map((catalog) => catalog.id)).toEqual(
-      SPEC.catalogs.map((c) => `qmrf-${c.name}`)
+      SPEC.catalogs.map((c) => `qmrf-catalog-${c.name}`)
+    )
+    expect(catalogs.map((catalog) => catalog.dataset.qmrfPath)).toEqual(
+      SPEC.catalogs.map((c) => `Catalogs[0]/${c.name}[0]`)
     )
     const headings = Array.from(container.querySelectorAll('.qmrf-catalog-table th')).map(
       (cell) => cell.textContent
@@ -109,7 +115,7 @@ describe('ReportView on the published document', () => {
     expect(headings).not.toContain('id')
     expect(headings).toContain('url')
     // The vocabulary is a picker here, so this document's one cited endpoint is its own row.
-    const endpoints = catalogs.find((c) => c.id === 'qmrf-endpoints_catalog')
+    const endpoints = catalogs.find((c) => c.id === 'qmrf-catalog-endpoints_catalog')
     expect(endpoints?.querySelectorAll('tbody tr')).toHaveLength(1)
     expect(endpoints?.textContent).toContain('Acute toxicity to fish')
   })
@@ -193,10 +199,17 @@ describe('sanitising a document that is not trusted', () => {
   })
 })
 
+/** @returns {string[]} the chapter headings the report itself rendered. */
+function chapterHeadings() {
+  return Array.from(document.querySelectorAll('.qmrf-report .qmrf-chapter-heading')).map(
+    (node) => node.textContent ?? ''
+  )
+}
+
 describe('QMRFViewer', () => {
   it('opens the document it is handed', () => {
     render(<QMRFViewer xml={fixture} />)
-    expect(screen.getByText('1. QSAR identifier')).toBeInTheDocument()
+    expect(chapterHeadings()[0]).toBe('1. QSAR identifier')
   })
 
   it('offers Open, and nothing that writes, to a read-only host', () => {
@@ -219,9 +232,9 @@ describe('QMRFViewer', () => {
   })
 
   it('leaves the chrome out when the host brings its own', () => {
-    render(<QMRFViewer xml={fixture} readOnly={false} showHeader={false} />)
+    render(<QMRFViewer xml={fixture} readOnly={false} showHeader={false} showNav={false} />)
     expect(screen.queryByRole('button')).toBeNull()
-    expect(screen.getByText('1. QSAR identifier')).toBeInTheDocument()
+    expect(chapterHeadings()).toHaveLength(SPEC.chapters.length)
   })
 
   it('starts empty and says how to get a document in', () => {
@@ -243,7 +256,7 @@ describe('QMRFViewer', () => {
     if (!root) throw new Error('the viewer rendered no root to drop on')
     const file = new File([fixture], 'qmrf.xml', { type: 'application/xml' })
     fireEvent.drop(root, { dataTransfer: { files: [file], types: ['Files'] } })
-    expect(await screen.findByText('1. QSAR identifier')).toBeInTheDocument()
+    await waitFor(() => expect(chapterHeadings()).toHaveLength(SPEC.chapters.length))
   })
 
   it('opens a picked file', async () => {
@@ -255,7 +268,7 @@ describe('QMRFViewer', () => {
     // No `value`: a file input's value may only be set to '', which is what the handler does with it
     // afterwards so that picking the same file twice still registers.
     fireEvent.change(input)
-    expect(await screen.findByText('1. QSAR identifier')).toBeInTheDocument()
+    await waitFor(() => expect(chapterHeadings()).toHaveLength(SPEC.chapters.length))
   })
 
   it('starts a new document when the user asks for one', () => {
@@ -264,6 +277,8 @@ describe('QMRFViewer', () => {
     // Ten chapters of an empty 3.0 skeleton rather than the published document's content.
     expect(document.querySelectorAll('.qmrf-chapter')).toHaveLength(SPEC.chapters.length)
     // A fresh document has no publications yet, unlike the published one.
-    expect(document.querySelector('#qmrf-publications_catalog')?.textContent).toContain('Nothing')
+    expect(
+      document.querySelector('[data-qmrf-path="Catalogs[0]/publications_catalog[0]"]')?.textContent
+    ).toContain('Nothing')
   })
 })

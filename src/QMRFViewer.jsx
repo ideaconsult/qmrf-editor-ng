@@ -1,16 +1,19 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useId, useState } from 'react'
+import Header from './components/Header.jsx'
 import ReportView from './components/ReportView.jsx'
-import Toolbar from './components/Toolbar.jsx'
-import { useDocument } from './hooks/useDocument.js'
+import Sidebar from './components/Sidebar.jsx'
+import { EditorProvider, useEditor } from './context/EditorContext.jsx'
+import { useViewerConfig, ViewerConfigProvider } from './context/ViewerConfig.jsx'
 import './styles/viewer.css'
 
 /**
  * Viewer and editor for a QMRF ((Q)SAR Model Reporting Format) document — the React rewrite of the
  * Java QMRF Editor, which is itself a viewer for QMRF files as much as an editor of them.
  *
- * What is on screen now is the report: the ten chapters as the schema numbers and labels them, with
- * catalog entries shown where the chapters cite them. Editing arrives with the field editors; the
- * props below already carry their switches so that hosts can pass them today.
+ * The component is three layers: what the host asked for (`ViewerConfigProvider`), the open document
+ * (`EditorProvider`), and the shell that reads both. Keeping them separate is what lets a field
+ * editor added later reach the document without four components in between agreeing to forward it,
+ * and lets two viewers sit in one host page without sharing ids or scroll targets.
  *
  * @typedef {object} QMRFViewerProps
  * @property {string} [xml] QMRF document text to open immediately.
@@ -18,6 +21,7 @@ import './styles/viewer.css'
  * @property {string} [token] Bearer token used for the `url` fetch.
  * @property {boolean} [readOnly] Defaults to `true`; set `false` to allow editing.
  * @property {boolean} [showHeader] Defaults to `true`; hosts render their own chrome.
+ * @property {boolean} [showNav] Defaults to `true`; the chapter and catalog outline.
  * @property {(xml: string) => void | Promise<void>} [onSave] Host save handler; enables the Save action.
  */
 
@@ -30,14 +34,28 @@ export default function QMRFViewer({
   token,
   readOnly = true,
   showHeader = true,
+  showNav = true,
   onSave
 }) {
-  const doc = useDocument({ xml, url, token, onSave })
+  // One id prefix per mounted viewer, so catalog anchors and (later) field ids stay unique even when
+  // a host embeds two of these side by side.
+  const uid = useId().replace(/:/g, '') || 'qmrf'
+  return (
+    <ViewerConfigProvider config={{ readOnly, showHeader, showNav, onSave, uid }}>
+      <EditorProvider xml={xml} url={url} token={token} onSave={onSave}>
+        <Shell />
+      </EditorProvider>
+    </ViewerConfigProvider>
+  )
+}
+
+function Shell() {
+  const { doc, reportRef } = useEditor()
+  const { showHeader, showNav } = useViewerConfig()
   const [dropping, setDropping] = useState(false)
-  const canWrite = !readOnly || Boolean(onSave)
 
   const onDrop = useCallback(
-    /** @type {(event: React.DragEvent<HTMLDivElement>) => void} */
+    /** @type {(event: React.DragEvent<HTMLElement>) => void} */
     (event) => {
       event.preventDefault()
       setDropping(false)
@@ -64,32 +82,27 @@ export default function QMRFViewer({
       onDragLeave={() => setDropping(false)}
       onDrop={onDrop}
     >
-      {showHeader ? (
-        <header className="qmrf-header">
-          <span className="qmrf-title">QMRF</span>
-          <Toolbar
-            onOpenFile={doc.openFile}
-            onCreate={readOnly ? undefined : doc.create}
-            onSave={canWrite ? doc.save : undefined}
-            dirty={doc.dirty}
-          />
-        </header>
-      ) : null}
+      {showHeader ? <Header /> : null}
       {doc.error ? (
         <p className="qmrf-banner qmrf-banner--error" role="alert">
           {doc.error}
         </p>
       ) : null}
       {doc.loading ? <p className="qmrf-empty">Loading…</p> : null}
-      {!doc.loading && doc.model ? <ReportView model={doc.model} /> : null}
-      {!doc.loading && !doc.model ? (
-        <div className="qmrf-empty qmrf-empty-start">
-          <p>No QMRF document loaded.</p>
-          <p>
-            Open a <code>.xml</code> file, or drop one here.
-          </p>
+      <div className="qmrf-layout">
+        {showNav && !doc.loading && doc.model ? <Sidebar /> : null}
+        <div className="qmrf-report-area" ref={reportRef}>
+          {!doc.loading && doc.model ? <ReportView model={doc.model} /> : null}
+          {!doc.loading && !doc.model ? (
+            <div className="qmrf-empty qmrf-empty-start">
+              <p>No QMRF document loaded.</p>
+              <p>
+                Open a <code>.xml</code> file, or drop one here.
+              </p>
+            </div>
+          ) : null}
         </div>
-      ) : null}
+      </div>
     </section>
   )
 }

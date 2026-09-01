@@ -11,6 +11,10 @@
   --qmrf-warn-fg: #8a5200;
   --qmrf-error-bg: #fdeceb;
   --qmrf-error-fg: #a12622;
+  --qmrf-note-bg: #eef2f7;
+  --qmrf-note-fg: #4a5a72;
+  --qmrf-ok-bg: #e7f3ea;
+  --qmrf-ok-fg: #1f6b3d;
   --qmrf-radius: 6px;
   --qmrf-gap: 12px;
 
@@ -83,6 +87,180 @@
 .qmrf-dirty {
   color: var(--qmrf-accent);
   margin-left: 4px;
+}
+
+/* Undo/redo belong with each other rather than with the file actions: they step through the
+   document, not through the filesystem. They are a named group, which in HTML is a fieldset, so
+   the form styling a fieldset brings is reset away rather than inherited by the header. */
+.qmrf-history {
+  border: 0;
+  display: flex;
+  gap: 6px;
+  margin: 0 auto 0 0;
+  min-inline-size: 0;
+  padding: 0;
+}
+
+.qmrf-history .qmrf-button:disabled {
+  color: var(--qmrf-muted);
+  cursor: default;
+}
+
+.qmrf-history .qmrf-button:disabled:hover {
+  border-color: var(--qmrf-border);
+}
+
+/* The validation summary is a chip rather than a heading: it sits in the chrome next to the file
+   actions and its colour, not its wording, is what a reader reads first. */
+.qmrf-chip {
+  border: 1px solid transparent;
+  border-radius: 999px;
+  cursor: pointer;
+  font: inherit;
+  padding: 3px 10px;
+}
+
+.qmrf-chip:disabled {
+  cursor: default;
+}
+
+.qmrf-chip--clean {
+  background: var(--qmrf-ok-bg);
+  color: var(--qmrf-ok-fg);
+}
+
+.qmrf-chip--info {
+  background: var(--qmrf-note-bg);
+  color: var(--qmrf-note-fg);
+}
+
+.qmrf-chip--warning {
+  background: var(--qmrf-warn-bg);
+  color: var(--qmrf-warn-fg);
+}
+
+.qmrf-chip--error {
+  background: var(--qmrf-error-bg);
+  border-color: var(--qmrf-error-fg);
+  color: var(--qmrf-error-fg);
+}
+
+/* ---------- the shell: outline beside the report ---------- */
+
+/* The report keeps its own reading measure; the outline takes the spare width. Below one column
+   the outline moves above the report, where it is a table of contents rather than a sidebar. */
+.qmrf-layout {
+  align-items: start;
+  display: grid;
+  gap: calc(var(--qmrf-gap) * 2);
+  grid-template-columns: minmax(0, 1fr);
+  padding: 0 var(--qmrf-gap);
+}
+
+@media (min-width: 60rem) {
+  .qmrf-layout {
+    grid-template-columns: 15rem minmax(0, 1fr);
+  }
+
+  .qmrf-nav {
+    position: sticky;
+    top: 8px;
+  }
+}
+
+.qmrf-report-area {
+  min-width: 0;
+}
+
+.qmrf-nav {
+  border-right: 1px solid var(--qmrf-border);
+  font-size: 13px;
+  max-height: calc(100vh - 16px);
+  overflow: auto;
+  padding: var(--qmrf-gap) var(--qmrf-gap) var(--qmrf-gap) 0;
+}
+
+@media (max-width: 59.99rem) {
+  .qmrf-nav {
+    border-bottom: 1px solid var(--qmrf-border);
+    border-right: 0;
+    max-height: 14rem;
+    padding: var(--qmrf-gap) 0;
+  }
+}
+
+.qmrf-nav-title {
+  color: var(--qmrf-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  margin: 12px 0 2px;
+  text-transform: uppercase;
+}
+
+.qmrf-nav-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.qmrf-nav-item {
+  align-items: baseline;
+  background: none;
+  border: 0;
+  border-radius: var(--qmrf-radius);
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  font: inherit;
+  gap: 6px;
+  padding: 3px 6px;
+  text-align: left;
+  width: 100%;
+}
+
+.qmrf-nav-item:hover {
+  background: color-mix(in srgb, var(--qmrf-border) 35%, var(--qmrf-bg));
+}
+
+/* The jump's destination: the item the reader last asked for stays marked, because the report
+   scrolls under a sticky outline and the eye loses the thread otherwise. */
+.qmrf-nav-item--current {
+  background: color-mix(in srgb, var(--qmrf-accent) 12%, var(--qmrf-bg));
+  font-weight: 600;
+}
+
+.qmrf-nav-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.qmrf-nav-detail {
+  color: var(--qmrf-muted);
+  font-size: 12px;
+}
+
+.qmrf-nav-count {
+  border-radius: 8px;
+  font-size: 11px;
+  margin-left: auto;
+  padding: 0 6px;
+}
+
+.qmrf-nav-count--info {
+  background: var(--qmrf-note-bg);
+  color: var(--qmrf-note-fg);
+}
+
+.qmrf-nav-count--warning {
+  background: var(--qmrf-warn-bg);
+  color: var(--qmrf-warn-fg);
+}
+
+.qmrf-nav-count--error {
+  background: var(--qmrf-error-bg);
+  color: var(--qmrf-error-fg);
+  font-weight: 600;
 }
 
 .qmrf-banner {
@@ -325,7 +503,12 @@
 
 @media print {
   .qmrf-header,
-  .qmrf-toolbar {
+  .qmrf-toolbar,
+  .qmrf-nav {
     display: none;
+  }
+
+  .qmrf-layout {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

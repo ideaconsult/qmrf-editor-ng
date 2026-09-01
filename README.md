@@ -42,7 +42,9 @@ optimizeDeps: { include: ['@ideaconsult/qmrf-viewer'] }
 
 ### Props
 
-Planned API (only `showHeader` is live during scaffolding):
+Every prop below is live. `readOnly: false` enables the document actions (New, Save, the
+undo tape); the in-place field editors are the next milestone, so a read-only host and an
+editing host currently differ only in those.
 
 | Prop | Type | Notes |
 | --- | --- | --- |
@@ -51,6 +53,7 @@ Planned API (only `showHeader` is live during scaffolding):
 | `readOnly` | `boolean` | Defaults to `true`. Set `false` to allow editing. |
 | `token` | `string` | Bearer token for the `url` fetch. Never placed in a URL. |
 | `showHeader` | `boolean` | Defaults to `true`; hosts usually pass `false`. |
+| `showNav` | `boolean` | Defaults to `true`; the chapter and catalog outline beside the report. |
 | `onSave` | `(xml: string) => void` | Host save handler; enables the Save action. |
 
 Open documents are always downloadable; `onSave` is how an embedding host routes a save to

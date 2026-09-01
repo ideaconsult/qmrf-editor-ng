@@ -1,3 +1,4 @@
+import { useViewerConfig } from '../context/ViewerConfig.jsx'
 import { plainText } from '../qmrf/html.js'
 import { formatPath, textOf } from '../qmrf/model.js'
 import { CATALOG_NOTES, documentMeta, elements, headingOf, linkHref } from '../qmrf/render.js'
@@ -36,7 +37,7 @@ export default function ReportView({ model }) {
 
   return (
     <article className="qmrf-report">
-      <header className="qmrf-document">
+      <header className="qmrf-document" data-qmrf-path="">
         <h2 className="qmrf-document-title">{title || 'Untitled QMRF'}</h2>
         <dl className="qmrf-document-meta">
           {documentMeta(model).map((row) => (
@@ -143,13 +144,21 @@ function Catalogs(/** @type {{block: XmlElement}} */ { block }) {
 const HIDDEN_COLUMNS = ['id', 'ontology_term']
 
 function Catalog(/** @type {{catalog: XmlElement}} */ { catalog }) {
+  const { uid } = useViewerConfig()
   const shape = SPEC.catalogs.find((entry) => entry.name === catalog.name)
   const entries = elements(catalog)
   const label = shape?.label ?? catalog.name.replace(/_catalog$/, '')
   const note = CATALOG_NOTES[catalog.name] ?? ''
+  // The catalog's own address, so the outline can jump here, and an id prefixed with this viewer's
+  // uid, so two viewers in one host page do not share anchors.
+  const address = formatPath([
+    { name: CATALOGS_BLOCK, index: 0 },
+    { name: catalog.name, index: 0 }
+  ])
+  const id = `${uid}-catalog-${catalog.name}`
   if (entries.length === 0)
     return (
-      <section className="qmrf-catalog" id={`qmrf-${catalog.name}`}>
+      <section className="qmrf-catalog" id={id} data-qmrf-path={address}>
         <h4 className="qmrf-catalog-heading">{label}</h4>
         <p className="qmrf-catalog-empty">
           {note ? `${note} ` : ''}
@@ -165,7 +174,7 @@ function Catalog(/** @type {{catalog: XmlElement}} */ { catalog }) {
     node.attrs.find((attr) => attr.name === name)?.value ?? ''
 
   return (
-    <section className="qmrf-catalog" id={`qmrf-${catalog.name}`}>
+    <section className="qmrf-catalog" id={id} data-qmrf-path={address}>
       <h4 className="qmrf-catalog-heading">
         {label} <span className="qmrf-catalog-count">{entries.length}</span>
       </h4>

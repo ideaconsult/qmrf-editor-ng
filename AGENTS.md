@@ -105,6 +105,7 @@ any UI layer. Tests live in `src/tests/qmrf/`.
 | `io.js` | the only browser I/O: `readText` (`File`), `fetchText` (with bearer token, status kept in the message), `downloadText`, `suggestedFilename`. Everything above it works on text. |
 | `newDocument.js` | the skeleton a New document starts from, **generated from `spec.js`** — required children only, `#FIXED` attributes from the DTD, required answers from the DTD's own enum. It validates with zero issues; upstream's hand-written `qmrf.xml` template does not (8 missing `catalog` attributes, `version="3.0.1"`). |
 | `render.js` | the *reading* rules of the report view: which element is a field (`fieldKind`), how a heading reads (`headingOf`, from the document's own attrs), what a pointer shows (`resolveReference`), which flags and files a field lists, and what counts as a link (`linkHref` refuses a bare scheme). |
+| `outline.js` | what the sidebar lists: the document's own chapters (drifted heading and all) and catalogs, each with the findings attributed to it. The chapters come from the document, not from `SPEC`, so a repeated chapter appears once per occurrence. `totalOf(outline)` must equal `validate(model).counts`. |
 | `vocab/endpoints.js` | the vendored 347-row endpoint vocabulary (`endpoints-source.xml`), parsed at first use. A **picker**: picking a term mints one `endpoints_catalog` entry carrying the vocabulary's id; documents are never seeded with the whole list. |
 
 **Deliberate departures from the file list in [docs/PLAN.md](./docs/PLAN.md):** there is no
@@ -119,6 +120,27 @@ list can rot. `spec.js` stays Biome-excluded (see above).
 validation report, `dirty`, and the open/create/edit/save/undo actions. Components below it are
 presentational (`Toolbar` takes three callbacks, nothing else), so the same pieces serve the
 standalone app, a host embed and the editor.
+
+### The shell is two contexts, not a prop chain
+
+- `src/context/ViewerConfig.jsx` — what the host asked for: `readOnly`, `showHeader`, `showNav`,
+  `onSave`, and a per-mount `uid` that prefixes element ids so two viewers in one host page do
+  not share anchors.
+- `src/context/EditorContext.jsx` — the open document (`useDocument`), its outline
+  (`src/qmrf/outline.js`), the last-focused address, and `showAddress(address)`, which scrolls
+  **within `reportRef`** so a jump cannot escape into the host page. Addresses contain `[`/`]`,
+  hence the `CSS.escape` in that selector.
+- `src/QMRFViewer.jsx` renders the layout only: `Header`, then `Sidebar` beside
+  `.qmrf-report-area`. `Header` holds the validation chip (click: go to the worst first finding),
+  undo/redo and the `Toolbar`; `Sidebar` lists the document, its chapters and its catalogs with
+  per-part finding counts. Both read the contexts, so a field editor added later reaches the
+  document without four components agreeing to forward it.
+- **Jumps are by address, and `''` is one**: the document's own findings belong to its properties
+  block. `src/tests/shell.test.jsx` is the harness that proves an outline row reaches a report
+  element; it stubs `scrollIntoView`, which jsdom lacks.
+- **The edit toggle is M4, not here.** `readOnly={false}` currently turns on New/Save; a toggle
+  with no editors behind it is a control that lies, so it ships together with the first field
+  editor it would enable.
 
 - `src/components/Html.jsx` is the **only** place that sanitises. A QMRF text field is HTML written
   by whoever authored the document, so it passes DOMPurify here and nowhere else; a component that
