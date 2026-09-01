@@ -420,6 +420,23 @@ export function catalogOfEntry(/** @type {XmlElement} */ node) {
   return catalogOfRef(`${node.name}_ref`)
 }
 
+/**
+ * The entry an `idref` names — what the view shows in place of a pointer, and what the catalog
+ * tables edit. The first match wins, which is what an IDREF resolution does anyway (`id(@idref)`
+ * in the upstream XSLT), so a document with duplicate ids renders the same here as upstream does;
+ * the validator is where the duplication itself gets reported.
+ * @returns {{node: XmlElement, path: Path, catalog: string}|null}
+ */
+export function entryById(/** @type {Model} */ model, /** @type {string} */ id) {
+  if (!id || !model.root) return null
+  for (const entry of collectIds(model)) {
+    if (entry.id !== id) continue
+    const node = elementAt(model, entry.path)
+    if (node) return { node, path: entry.path, catalog: entry.catalog }
+  }
+  return null
+}
+
 /** @typedef {{ path: Path, attr: string, catalog: string, via: 'ref-element' | 'idref-attr', value: string }} Reference */
 
 /**

@@ -1,12 +1,20 @@
 # Implementation Plan
 
-Status: **approved 2026-09-01; M0 (scaffold) and M1 (schema + model) complete.** M2–M6 outstanding.
+Status: **approved 2026-09-01; M0 (scaffold), M1 (schema + model) and M2 (IO + viewer) complete.** M3–M6 outstanding.
 
 What M1 changed about this plan, in one line each: the field kinds are **eight**, not five (see
 the correction in the Domain section); parsing and writing share one `src/qmrf/xml.js` instead of
 `parse.js`/`write.js`; `*_ref/@idref` is `CDATA`, not `IDREF`, so pointer routing is by element
 name; and the real 0.9 fixture uses exactly the 3.0 element vocabulary, so best-effort editing of
 older documents is a labelling problem, not a parsing one. Details in `AGENTS.md`.
+
+What M2 changed about this plan, in one line each: the new document is **generated from the schema**
+rather than seeded from upstream's `qmrf.xml` (that template is kept as a fixture and costs eight
+`fixed-attr-missing` warnings plus a `version="3.0.1"` drift, so it is a comparison, not a source);
+the endpoint vocabulary is a **picker that mints one catalog entry per pick** rather than 347 rows in
+every file; text fields store a whole escaped HTML document, so the envelope has one owner,
+`src/qmrf/html.js`; and a document with no XML element in it is an error banner rather than a blank
+viewer. Details in `AGENTS.md`.
 
 Naming settled during M0 in favour of the viewer role and this repo's folder: package
 `@ideaconsult/qmrf-viewer`, library global `QMRFViewer`, bundle `dist/qmrf-viewer.js`,
@@ -62,7 +70,7 @@ CI to satisfy: `pnpm install --frozen-lockfile` → `pnpm peers check` → `pnpm
 
 **M1 — schema + model.** `vendor/qmrf.dtd`; `scripts/gen-spec.mjs` → `src/qmrf/spec.js` (per field: `path`, `chapter`, `label`, `kind`, `enumAttrs`, `requiredAttrs`, `refCatalog`, `repeatable`) so labels/numbering can't drift from the schema; `src/qmrf/parse.js` (DOMParser → model, `parsererror` non-fatal); `src/qmrf/model.js` — **normalized immutable model** that keeps attributes in document order and text raw, so untouched nodes serialize back identically (chosen over a live mutable DOM because undo/redo needs cheap snapshots); `src/qmrf/write.js` (serializer + `PUBLIC …/3.0.0/qmrf.dtd SYSTEM "qmrf.dtd"` doctype); `src/qmrf/validate.js` (required children, enum values, unknown elements/attrs, **ID/IDREF integrity**, repeat-group counts; issues keyed by field path); `src/qmrf/history.js` (snapshot stack).
 
-**M2 — IO + viewer.** `src/qmrf/newDocument.js` + `src/qmrf/vocab/endpoints.js` (seeded from `qmrf-core\...\endpoints\endpoints.xml`, 58 KB; the other three OECD/EC lists later); new-doc template seeded like `qmrf-core\...\qmrf.xml` (`firstsoftware`, `firstauthor`); open (picker + drag-drop), **fetch from `?url=`**, dirty tracking, download, `onSave`; `src/components/ReportView.jsx` — the read-only rendered document; `src/components/Html.jsx` for sanitized field HTML; fixtures `src/tests/fixtures/{qmrf-0.9-real.xml,qmrf-new.xml}`.
+**M2 — IO + viewer.** `src/qmrf/newDocument.js` (skeleton generated from `spec.js`, so a fresh document validates with zero issues) + `src/qmrf/html.js` (the escaped-HTML envelope: `fieldHtml`/`plainText`/`wrapHtml`) + `src/qmrf/vocab/endpoints.js` (vendored `endpoints-source.xml`, 347 rows, parsed at first use; a picker, not a seed) + `src/qmrf/io.js` (the only browser I/O: `File.text`, `fetch` with a bearer token, download anchor, title-derived filename); open (picker + drag-drop), **fetch from `?url=`**, dirty tracking, download, `onSave` — all behind `src/hooks/useDocument.js`; `src/components/{ReportView,Toolbar}.jsx` and `src/components/fields/FieldView.jsx` — the read-only report, dispatched on `kind` and addressed by `data-qmrf-path`; `src/components/Html.jsx` for sanitized field HTML (`data-qmrf-target` on a pointer names the entry it cites, for M6's jump); fixtures `src/tests/fixtures/{qmrf-0.9-real.xml,qmrf-new-template.xml}` (the published JRC document, and upstream's template as the comparison the generator is measured against).
 
 **M3 — shell + edit.** `src/context/{EditorContext,ViewerConfig}.jsx`; `Sidebar`/`ChapterNav`/`CatalogNav` (10 chapters + 6 catalogs, per-chapter issue counts); `QMRFViewer.jsx` body with `readOnly` default and an edit toggle; `Header` with open/save/validate/dirty/undo/redo.
 

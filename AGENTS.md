@@ -101,12 +101,40 @@ any UI layer. Tests live in `src/tests/qmrf/`.
 | `model.js` | immutable editing: `openModel`/`saveModel`, paths as `Step[]` (`QMRF_chapters[0]/QSAR_identifier[0]/QSAR_title[0]`), `getValue`/`setValue`, `getAttr`/`setAttr`, `insertOccurrence`/`removeElement`, `collectIds`/`collectReferences`/`referencesTo`/`renameId`. |
 | `validate.js` | `validate(model) → { issues, version, counts }`; every issue carries `path`, `chapter` and DTD `label` so the UI can jump to the field. |
 | `history.js` | undo/redo over those immutable models: `mergeKey` folds a typing gesture into one step, `markSaved`/`isDirty` track the saved index rather than a boolean. |
+| `html.js` | the rich-text **envelope** and nothing else: `fieldHtml` (body out), `wrapHtml` (body back in the form the Java kit wrote), `plainText` (one readable line, for titles and search). DOM-free; sanitisation belongs to `Html.jsx`. |
+| `io.js` | the only browser I/O: `readText` (`File`), `fetchText` (with bearer token, status kept in the message), `downloadText`, `suggestedFilename`. Everything above it works on text. |
+| `newDocument.js` | the skeleton a New document starts from, **generated from `spec.js`** — required children only, `#FIXED` attributes from the DTD, required answers from the DTD's own enum. It validates with zero issues; upstream's hand-written `qmrf.xml` template does not (8 missing `catalog` attributes, `version="3.0.1"`). |
+| `render.js` | the *reading* rules of the report view: which element is a field (`fieldKind`), how a heading reads (`headingOf`, from the document's own attrs), what a pointer shows (`resolveReference`), which flags and files a field lists, and what counts as a link (`linkHref` refuses a bare scheme). |
+| `vocab/endpoints.js` | the vendored 347-row endpoint vocabulary (`endpoints-source.xml`), parsed at first use. A **picker**: picking a term mints one `endpoints_catalog` entry carrying the vocabulary's id; documents are never seeded with the whole list. |
 
 **Deliberate departures from the file list in [docs/PLAN.md](./docs/PLAN.md):** there is no
 `parse.js`/`write.js` split — reading and writing a document are two directions over one
 representation, and splitting them would put the fidelity rules on both sides of a boundary.
 There is no `src/qmrf/index.js` façade either: callers import the module they need, so no export
 list can rot. `spec.js` stays Biome-excluded (see above).
+
+## The View Layer
+
+`src/hooks/useDocument.js` is the only place React meets the core: it owns the history, the
+validation report, `dirty`, and the open/create/edit/save/undo actions. Components below it are
+presentational (`Toolbar` takes three callbacks, nothing else), so the same pieces serve the
+standalone app, a host embed and the editor.
+
+- `src/components/Html.jsx` is the **only** place that sanitises. A QMRF text field is HTML written
+  by whoever authored the document, so it passes DOMPurify here and nowhere else; a component that
+  needs field content calls `fieldHtml` and hands the result to `<Html>`. `<style>` and form/media
+  elements are forbidden outright, and `target` links get `rel="noopener noreferrer"` after mount
+  (not as a global DOMPurify hook, which would leak into the host's own sanitising).
+- `src/components/fields/FieldView.jsx` dispatches on `fieldKind`, never on document shape, and
+  `render.js` decides *what* a field means. Keep reading rules in `render.js` (pure, unit-tested)
+  and layout here.
+- Every rendered chapter, field, pointer, attachment and catalog row carries its model address in
+  `data-qmrf-path`, so an issue can scroll to its field and M5's delete guard can find a row. A
+  pointer additionally carries `data-qmrf-target`: the address of the entry it cites. Keep those
+  addresses unique — the report's own tests assert it.
+- The report keeps the six catalogs as an appendix. Upstream's `qmrf2div.xsl` hides them, and that
+  is right for a printed report; an editor and a reader who wants to know what a model drew on both
+  need to reach them. That is a documented departure, not an oversight.
 
 ## Project Shape
 
