@@ -1,0 +1,20 @@
+/* Standalone app chrome only (page background, centering). Library styles live in
+   styles/viewer.css and are scoped under `.qmrf-root`; nothing here may leak into a host. */
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: #f5f7fa;
+}
+
+.qmrf-app {
+  box-sizing: border-box;
+  margin: 0 auto;
+  max-width: 1280px;
+  padding: 16px;
+}

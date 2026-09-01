@@ -1,0 +1,526 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE QMRF PUBLIC "http://svn.code.sf.net/p/qmrf/code/trunk/schema/3.0.0/qmrf.dtd" "qmrf.dtd" >
+<QMRF author="Joint Research Centre, European Commission; eNanoMapper" contact="Joint Research Centre, European Commission; eNanoMapper"
+	date="Oct 2017" email="JRC-COMPUTOX@ec.europa.eu" name="(Q)SAR Model Reporting Format" schema_version="1.0" url="http://qmrf.sf.net" version="3.0.1">
+  <QMRF_chapters>
+    <QSAR_identifier chapter="1" help="" name="QSAR identifier">
+      <QSAR_title chapter="1.1" help="" name="QSAR identifier (title)"></QSAR_title>
+      <QSAR_models chapter="1.2" help="" name="Other related models"></QSAR_models>
+      <QSAR_software chapter="1.3" help="" name="Software coding the model">
+			<software_ref idref="firstsoftware" />
+      </QSAR_software>
+    </QSAR_identifier>
+    <QSAR_General_information chapter="2" help="" name="General information">
+      <qmrf_date chapter="2.1" help="" name="Date of QMRF"></qmrf_date>
+      <qmrf_authors chapter="2.2" help="" name="QMRF author(s) and contact details">
+		<author_ref idref="firstauthor"/>
+      </qmrf_authors>
+      <qmrf_date_revision chapter="2.3" help="" name="Date of QMRF update(s)"></qmrf_date_revision>
+      <qmrf_revision chapter="2.4" help="" name="QMRF update(s)"></qmrf_revision>
+      <model_authors chapter="2.5" help="" name="Model developer(s) and contact details">
+		<author_ref idref="modelauthor"/>
+      </model_authors>
+      <model_date chapter="2.6" help="" name="Date of model development and/or publication"></model_date>
+      <references chapter="2.7" help="" name="Reference(s) to main scientific papers and/or software package">
+
+      </references>
+      <info_availability chapter="2.8" help="" name="Availability of information about the model"></info_availability>
+      <related_models chapter="2.9" help="" name="Availability of another QMRF for exactly the same model"></related_models>
+    </QSAR_General_information>
+    <QSAR_Endpoint chapter="3" help="" name="Defining the endpoint - OECD Principle 1">
+      <model_species chapter="3.1" help="" name="Species"></model_species>
+      <model_endpoint chapter="3.2" help="" name="Endpoint">
+
+      </model_endpoint>
+      <endpoint_comments chapter="3.3" help="" name="Comment on endpoint"></endpoint_comments>
+      <endpoint_units chapter="3.4" help="" name="Endpoint units"></endpoint_units>
+      <endpoint_variable chapter="3.5" help="" name="Dependent variable"></endpoint_variable>
+      <endpoint_protocol chapter="3.6" help="" name="Experimental protocol"></endpoint_protocol>
+      <endpoint_data_quality chapter="3.7" help="" name="Endpoint data quality and variability"></endpoint_data_quality>
+    </QSAR_Endpoint>
+    <QSAR_Algorithm chapter="4" help="" name="Defining the algorithm - OECD Principle 2">
+      <algorithm_type chapter="4.1" help="" name="Type of model"></algorithm_type>
+      <algorithm_explicit chapter="4.2" help="" name="Explicit algorithm">
+	      <algorithm_ref idref="algorithms_catalog_1"/>
+        <equation></equation>
+
+      </algorithm_explicit>
+      <!-- deleted in 1.2 , all numbering moved one up
+      <algorithm_comments chapter="4.3" help="" name="Comments on algorithm"></algorithm_comments>
+      -->
+      <algorithms_descriptors chapter="4.3" help="" name="Descriptors in the model">
+      <descriptor_ref idref="descriptors_catalog_1"/>
+      </algorithms_descriptors>
+      <descriptors_selection chapter="4.4" help="" name="Descriptor selection"></descriptors_selection>
+      <descriptors_generation chapter="4.5" help="" name="Algorithm and descriptor generation"></descriptors_generation>
+      <descriptors_generation_software chapter="4.6" help="" name="Software name and version for descriptor generation" options="">
+				<software_ref idref="software_catalog_2"/>
+      </descriptors_generation_software>
+      <descriptors_chemicals_ratio chapter="4.7" help="" name="Chemicals/Descriptors ratio"></descriptors_chemicals_ratio>
+    </QSAR_Algorithm>
+    <QSAR_Applicability_domain chapter="5" help="" name="Defining the applicability domain - OECD Principle 3">
+      <app_domain_description chapter="5.1" help="" name="Description of the applicability domain of the model"></app_domain_description>
+      <app_domain_method chapter="5.2" help="" name="Method used to assess the applicability domain"></app_domain_method>
+      <app_domain_software chapter="5.3" help="" name="Software name and version for applicability domain assessment">
+<software_ref idref="software_catalog_3"/>
+      </app_domain_software>
+      <applicability_limits chapter="5.4" help="" name="Limits of applicability"></applicability_limits>
+    </QSAR_Applicability_domain>
+    <QSAR_Robustness chapter="6" help="" name="Internal validation - OECD Principle 4">
+      <training_set_availability answer="Yes" chapter="6.1" help="" name="Availability of the training set"></training_set_availability>
+      <training_set_data cas="Yes" chapter="6.2" chemname="Yes" formula="Yes" help="" inchi="Yes" mol="Yes" name="Available information for the training set" smiles="Yes" nanomaterial="No"></training_set_data>
+      <training_set_descriptors answer="All" chapter="6.3" help="" name="Data for each descriptor variable for the training set"></training_set_descriptors>
+      <dependent_var_availability answer="All" chapter="6.4" help="" name="Data for the dependent variable for the training set"></dependent_var_availability>
+      <other_info chapter="6.5" help="" name="Other information about the training set"></other_info>
+      <preprocessing chapter="6.6" help="" name="Pre-processing of data before modelling"></preprocessing>
+      <goodness_of_fit chapter="6.7" help="" name="Statistics for goodness-of-fit"></goodness_of_fit>
+      <loo chapter="6.8" help="" name="Robustness - Statistics obtained by leave-one-out cross-validation"></loo>
+      <lmo chapter="6.9" help="" name="Robustness - Statistics obtained by leave-many-out cross-validation"></lmo>
+      <yscrambling chapter="6.10" help="" name="Robustness - Statistics obtained by Y-scrambling"></yscrambling>
+      <bootstrap chapter="6.11" help="" name="Robustness - Statistics obtained by bootstrap"></bootstrap>
+      <other_statistics chapter="6.12" help="" name="Robustness - Statistics obtained by other methods"></other_statistics>
+    </QSAR_Robustness>
+    <QSAR_Predictivity chapter="7" help="" name="External validation - OECD Principle 4">
+      <validation_set_availability answer="Yes" chapter="7.1" help="" name="Availability of the external validation set"></validation_set_availability>
+      <validation_set_data cas="Yes" chapter="7.2" chemname="Yes" formula="Yes" help="" inchi="Yes" mol="Yes" name="Available information for the external validation set" smiles="Yes" nanomaterial="No"></validation_set_data>
+      <validation_set_descriptors answer="All" chapter="7.3" help="" name="Data for each descriptor variable for the external validation set"></validation_set_descriptors>
+      <validation_dependent_var_availability answer="All" chapter="7.4" help="" name="Data for the dependent variable for the external validation set"></validation_dependent_var_availability>
+      <validation_other_info chapter="7.5" help="" name="Other information about the external validation set"></validation_other_info>
+      <experimental_design chapter="7.6" help="" name="Experimental design of test set"></experimental_design>
+      <validation_predictivity chapter="7.7" help="" name="Predictivity - Statistics obtained by external validation"></validation_predictivity>
+      <validation_assessment chapter="7.8" help="" name="Predictivity - Assessment of the external validation set"></validation_assessment>
+      <validation_comments chapter="7.9" help="" name="Comments on the external validation of the model"></validation_comments>
+    </QSAR_Predictivity>
+    <QSAR_Interpretation chapter="8" help="" name="Providing a mechanistic interpretation - OECD Principle 5">
+      <mechanistic_basis chapter="8.1" help="" name="Mechanistic basis of the model"></mechanistic_basis>
+      <mechanistic_basis_comments chapter="8.2" help="" name="A priori or a posteriori mechanistic interpretation"></mechanistic_basis_comments>
+      <mechanistic_basis_info chapter="8.3" help="" name="Other information about the mechanistic interpretation"></mechanistic_basis_info>
+    </QSAR_Interpretation>
+    <QSAR_Miscelaneous chapter="9" help="" name="Miscellaneous information">
+      <comments chapter="9.1" help="" name="Comments"></comments>
+      <bibliography chapter="9.2" help="" name="Bibliography">
+				<publication_ref idref="publications_catalog_1"/>
+      </bibliography>
+      <attachments chapter="9.3" help="" name="Supporting information">
+        <attachment_training_data>
+        </attachment_training_data>
+        <attachment_validation_data>
+        </attachment_validation_data>
+        <attachment_documents>
+        </attachment_documents>
+      </attachments>
+    </QSAR_Miscelaneous>
+    <QMRF_Summary chapter="10" help="" name="Summary (JRC QSAR Model Database)">
+      <QMRF_number chapter="10.1" help="" name="QMRF number">To be entered by JRC</QMRF_number>
+      <date_publication chapter="10.2" help="" name="Publication date">To be entered by JRC</date_publication>
+      <keywords chapter="10.3" help="" name="Keywords">To be entered by JRC</keywords>
+      <summary_comments chapter="10.4" help="" name="Comments">To be entered by JRC</summary_comments>
+    </QMRF_Summary>
+  </QMRF_chapters>
+  <Catalogs>
+    <software_catalog>
+    	<software 
+    		id="firstsoftware"  		name=""
+    		url=""
+    		number=""
+    		description=""
+    		version=""
+    		contact=""
+    		ontology_term=""
+    	/>
+    	<software id="software_catalog_2"
+    		name=""
+    		url=""
+    		number=""
+    		description=""
+    		version=""
+    		contact=""
+    		/>
+    		<software id="software_catalog_3"
+    		name=""
+				url=""
+    		number=""
+    		description=""
+    		version=""
+    		contact=""
+    		ontology_term=""
+    		/>
+    </software_catalog>
+    <algorithms_catalog>
+	    <algorithm definition="" description="" id="algorithms_catalog_1" ontology_term=""/>
+    </algorithms_catalog>
+    <descriptors_catalog>
+    <descriptor id="descriptors_catalog_1" name="" units="" description="" ontology_term=""/>
+    </descriptors_catalog>
+   <endpoints_catalog>
+   <endpoint id="endpoint1_340" group="QMRF 1. Physical Chemical Properties" subgroup="" name="QMRF 1. 1. Melting point" />
+    <endpoint id="endpoint1_270" group="QMRF 1. Physical Chemical Properties" subgroup="" name="QMRF 1. 2. Boiling point" />
+    <endpoint id="endpoint1_271" group="QMRF 1. Physical Chemical Properties" subgroup="" name="QMRF 1. 3. Water solubility" />
+    <endpoint id="endpoint1_272" group="QMRF 1. Physical Chemical Properties" subgroup="" name="QMRF 1. 4. Vapour pressure" />
+    <endpoint id="endpoint1_273" group="QMRF 1. Physical Chemical Properties" subgroup="" name="QMRF 1. 5. Surface tension" />
+    <endpoint id="endpoint1_274" group="QMRF 1. Physical Chemical Properties" subgroup="" name="QMRF 1. 6. Octanol-water partition coefficient (Kow)" />
+    <endpoint id="endpoint1_275" group="QMRF 1. Physical Chemical Properties" subgroup="" name="QMRF 1. 7. Octanol-water distribution coefficient (D)" />
+    <endpoint id="endpoint1_276" group="QMRF 1. Physical Chemical Properties" subgroup="" name="QMRF 1. 8. Octanol-air partition coefficient (Koa)" />
+    <endpoint id="endpoint1_277" group="QMRF 1. Physical Chemical Properties" subgroup="" name="QMRF 1. 9. Air- water partition coefficient (Henrys law constant, H)" />
+    <endpoint id="endpoint1_278" group="QMRF 1. Physical Chemical Properties" subgroup="" name="QMRF 1.10. Dissociation constant (pKa)" />
+    <endpoint id="endpoint1_341" group="QMRF 1. Physical Chemical Properties" subgroup="" name="QMRF 1.11 Adsorption/Desorption" />
+    <endpoint id="endpoint1_342" group="QMRF 1. Physical Chemical Properties" subgroup="" name="QMRF 1.12. Complex Formation Ability in Water" />
+    <endpoint id="endpoint1_343" group="QMRF 1. Physical Chemical Properties" subgroup="" name="QMRF 1.13. Density" />
+    <endpoint id="endpoint1_344" group="QMRF 1. Physical Chemical Properties" subgroup="" name="QMRF 1.14. Particle Size Distribution" />
+    <endpoint id="endpoint1_345" group="QMRF 1. Physical Chemical Properties" subgroup="" name="QMRF 1.15. Hydrolysis" />
+    <endpoint id="endpoint1_346" group="QMRF 1. Physical Chemical Properties" subgroup="" name="QMRF 1.16. Stability" />
+    <endpoint id="endpoint1_347" group="QMRF 1. Physical Chemical Properties" subgroup="" name="QMRF 1.17. Viscosity" />
+    <endpoint id="endpoint1_348" group="QMRF 1. Physical Chemical Properties" subgroup="" name="QMRF 1.18. Fat Solubility" />
+    <endpoint id="endpoint1_356" group="QMRF 1. Physical Chemical Properties" subgroup="" name="QMRF 1.19. Flash point" />
+    <endpoint id="endpoint1_349" group="QMRF 1. Physical Chemical Properties" subgroup="" name="QMRF 1.20. Flammability" />
+    <endpoint id="endpoint1_350" group="QMRF 1. Physical Chemical Properties" subgroup="" name="QMRF 1.21. Explosive Properties" />
+    <endpoint id="endpoint1_351" group="QMRF 1. Physical Chemical Properties" subgroup="" name="QMRF 1.22. Auto-Ignition" />
+    <endpoint id="endpoint1_352" group="QMRF 1. Physical Chemical Properties" subgroup="" name="QMRF 1.23. Oxidizing Properties" />
+    <endpoint id="endpoint1_353" group="QMRF 1. Physical Chemical Properties" subgroup="" name="QMRF 1.24. Average Molecular Weight of Polymers" />
+    <endpoint id="endpoint1_354" group="QMRF 1. Physical Chemical Properties" subgroup="" name="QMRF 1.25. Solution/Extraction Behaviour of Polymers in Water" />
+    <endpoint id="endpoint1_355" group="QMRF 1. Physical Chemical Properties" subgroup="" name="QMRF 1.26. Length Weighted Geometric Mean Diameter of Fibres" />
+    <endpoint id="endpoint340_161" group="QMRF 1. 1. Melting point" subgroup="" name="EC A. 1. Melting/Freezing Temperature" />
+    <endpoint id="endpoint340_8" group="QMRF 1. 1. Melting point" subgroup="" name="OECD 102 Melting Point/Melting Range" />
+    <endpoint id="endpoint270_162" group="QMRF 1. 2. Boiling point" subgroup="" name="EC A. 2. Boiling Temperature" />
+    <endpoint id="endpoint270_9" group="QMRF 1. 2. Boiling point" subgroup="" name="OECD 103 Boiling Point" />
+    <endpoint id="endpoint271_164" group="QMRF 1. 3. Water solubility" subgroup="" name="EC A. 6. Water Solubility" />
+    <endpoint id="endpoint271_11" group="QMRF 1. 3. Water solubility" subgroup="" name="OECD 105 Water Solubility" />
+    <endpoint id="endpoint272_163" group="QMRF 1. 4. Vapour pressure" subgroup="" name="EC A.4 Vapour Pressure" />
+    <endpoint id="endpoint272_10" group="QMRF 1. 4. Vapour pressure" subgroup="" name="OECD 104 Vapour Pressure" />
+    <endpoint id="endpoint273_170" group="QMRF 1. 5. Surface tension" subgroup="" name="EC A. 5. Surface Tension" />
+    <endpoint id="endpoint273_21" group="QMRF 1. 5. Surface tension" subgroup="" name="OECD 115 Surface Tension of Aqueous Solutions" />
+    <endpoint id="endpoint274_166" group="QMRF 1. 6. Octanol-water partition coefficient (Kow)" subgroup="" name="EC A.8 Partition Coefficient (EU method includes both shake flask and HPLC)" />
+    <endpoint id="endpoint274_13" group="QMRF 1. 6. Octanol-water partition coefficient (Kow)" subgroup="" name="OECD 107 Partition Coefficient (n-octanol/water); Shake Flask Method" />
+    <endpoint id="endpoint274_23" group="QMRF 1. 6. Octanol-water partition coefficient (Kow)" subgroup="" name="OECD 117 Partition Coefficient (n-octanol/water) HPLC Method" />
+    <endpoint id="endpoint274_28" group="QMRF 1. 6. Octanol-water partition coefficient (Kow)" subgroup="" name="OECD 123 Partition Coefficient (n-Octanol/Water): Slow-Stirring Method" />
+    <endpoint id="endpoint278_18" group="QMRF 1.10. Dissociation constant (pKa)" subgroup="" name="OECD 112 Dissociation Constants in Water" />
+    <endpoint id="endpoint341_165" group="QMRF 1.11 Adsorption/Desorption" subgroup="" name="EC C.18. Adsorption/Desorption Using a Batch Equilibrium Method" />
+    <endpoint id="endpoint341_184" group="QMRF 1.11 Adsorption/Desorption" subgroup="" name="EC C.19 Estimation of the Adsorption Coefficient (Koc) on Soil and on Sewage Sludge Using High Performance Liquid Chromatography (HPLC)" />
+    <endpoint id="endpoint341_7" group="QMRF 1.11 Adsorption/Desorption" subgroup="" name="OECD 101 UV-VIS Adsorption Spectra" />
+    <endpoint id="endpoint341_12" group="QMRF 1.11 Adsorption/Desorption" subgroup="" name="OECD 106 Adsorption/Desorption Using a Batch Equilibrium Method" />
+    <endpoint id="endpoint341_27" group="QMRF 1.11 Adsorption/Desorption" subgroup="" name="OECD 121 Estimation of the Adsorption Coefficient (Koc) on Soil and on Sewage Sludge Using High Performance Liquid Chromatography (HPLC)" />
+    <endpoint id="endpoint342_14" group="QMRF 1.12. Complex Formation Ability in Water" subgroup="" name="OECD 108 Complex Formation Ability in Water" />
+    <endpoint id="endpoint343_168" group="QMRF 1.13. Density" subgroup="" name="EC A. 3. Relative Density" />
+    <endpoint id="endpoint343_15" group="QMRF 1.13. Density" subgroup="" name="OECD 109 Density of Liquids and Solids" />
+    <endpoint id="endpoint344_16" group="QMRF 1.14. Particle Size Distribution" subgroup="" name="OECD 110 Particle Size Distribution/Fibre Length and Diameter Distributions" />
+    <endpoint id="endpoint345_169" group="QMRF 1.15. Hydrolysis" subgroup="" name="EC C.7 Degradation: Abiotic Degradation: Hydrolysis as a Function of pH" />
+    <endpoint id="endpoint345_17" group="QMRF 1.15. Hydrolysis" subgroup="" name="OECD 111 Hydrolysis" />
+    <endpoint id="endpoint345_156" group="QMRF 1.15. Hydrolysis" subgroup="" name="OECD 507 Nature of Pesticide Residues in Processed Commodities  High Temperature Hydrolysis" />
+    <endpoint id="endpoint346_19" group="QMRF 1.16. Stability" subgroup="" name="OECD 113 Screening Test for Thermal Stability and Stability in Air" />
+    <endpoint id="endpoint347_20" group="QMRF 1.17. Viscosity" subgroup="" name="OECD 114 Viscosity of Liquids" />
+    <endpoint id="endpoint348_22" group="QMRF 1.18. Fat Solubility" subgroup="" name="OECD 116 Fat Solubility of Solid and Liquid Substances" />
+    <endpoint id="endpoint356_172" group="QMRF 1.19. Flash point" subgroup="" name="EC A. 9. Flash Point" />
+    <endpoint id="endpoint349_173" group="QMRF 1.20. Flammability" subgroup="" name="EC A.10. Flammability (Solids)" />
+    <endpoint id="endpoint349_174" group="QMRF 1.20. Flammability" subgroup="" name="EC A.11. Flammability (Gases)" />
+    <endpoint id="endpoint349_175" group="QMRF 1.20. Flammability" subgroup="" name="EC A.12. Flammability (Contact with Water)" />
+    <endpoint id="endpoint349_176" group="QMRF 1.20. Flammability" subgroup="" name="EC A.13. Pyrophoric Properties of Solids and Liquids" />
+    <endpoint id="endpoint350_177" group="QMRF 1.21. Explosive Properties" subgroup="" name="EC A.14. Explosive Properties" />
+    <endpoint id="endpoint351_178" group="QMRF 1.22. Auto-Ignition" subgroup="" name="EC A.15. Auto-Ignition Temperature (Liquid and Gases)" />
+    <endpoint id="endpoint351_179" group="QMRF 1.22. Auto-Ignition" subgroup="" name="EC A.16. Relative Self-Ignition Temperature for Solids" />
+    <endpoint id="endpoint352_180" group="QMRF 1.23. Oxidizing Properties" subgroup="" name="EC A.17. Oxidizing Properties (Solids)" />
+    <endpoint id="endpoint352_185" group="QMRF 1.23. Oxidizing Properties" subgroup="" name="EC A.21 Oxidizing properties (liquids)" />
+    <endpoint id="endpoint353_181" group="QMRF 1.24. Average Molecular Weight of Polymers" subgroup="" name="EC A.18 Number - Average Molecular Weight and Molecular Weight Distribution of Polymers" />
+    <endpoint id="endpoint353_182" group="QMRF 1.24. Average Molecular Weight of Polymers" subgroup="" name="EC A.19 Low Molecular Weight Content of Polymers" />
+    <endpoint id="endpoint353_24" group="QMRF 1.24. Average Molecular Weight of Polymers" subgroup="" name="OECD 118 Det Number Average M W and M W Distribution Polymers by Gel Perm Chromatogr" />
+    <endpoint id="endpoint353_25" group="QMRF 1.24. Average Molecular Weight of Polymers" subgroup="" name="OECD 119 Det Low M W Content Polymers by GPC" />
+    <endpoint id="endpoint354_183" group="QMRF 1.25. Solution/Extraction Behaviour of Polymers in Water" subgroup="" name="EC A.20 Solution/Extraction Behaviour of Polymers in Water" />
+    <endpoint id="endpoint354_26" group="QMRF 1.25. Solution/Extraction Behaviour of Polymers in Water" subgroup="" name="OECD 120 Solution/Extraction Behaviour of Polymers in Water" />
+    <endpoint id="endpoint355_186" group="QMRF 1.26. Length Weighted Geometric Mean Diameter of Fibres" subgroup="" name="EC A.22 Length Weighted Geometric Mean Diameter of Fibres (LWGMD)" />
+    <endpoint id="endpoint2_117" group="QMRF 2. Environmental fate parameters" subgroup="" name="OECD 228 Determination of Developmental Toxicity of a Test Chemical to Dipteran Dung Flies" />
+    <endpoint id="endpoint2_279" group="QMRF 2. Environmental fate parameters" subgroup="" name="QMRF 2. 1.a. Persistence: Abiotic degradation in water. Hydrolysis" />
+    <endpoint id="endpoint2_280" group="QMRF 2. Environmental fate parameters" subgroup="" name="QMRF 2. 1.b. Persistence: Abiotic degradation in water. Oxidation" />
+    <endpoint id="endpoint2_281" group="QMRF 2. Environmental fate parameters" subgroup="" name="QMRF 2. 1.c. Persistence: Abiotic degradation in water. Other" />
+    <endpoint id="endpoint2_282" group="QMRF 2. Environmental fate parameters" subgroup="" name="QMRF 2. 2.a. Persistence: Abiotic degradation in air (Phototransformation). Direct photolysis" />
+    <endpoint id="endpoint2_283" group="QMRF 2. Environmental fate parameters" subgroup="" name="QMRF 2. 2.b. Persistence: Abiotic degradation in air (Phototransformation). Indirect photolysis (OH-radical reaction, ozone-radical reaction, other)" />
+    <endpoint id="endpoint2_284" group="QMRF 2. Environmental fate parameters" subgroup="" name="QMRF 2. 3.a. Persistence: Biodegradation. Ready/not ready biodegradability" />
+    <endpoint id="endpoint2_285" group="QMRF 2. Environmental fate parameters" subgroup="" name="QMRF 2. 3.b. Persistence: Biodegradation. Biodegradation time frame (primary, ultimate degradation)" />
+    <endpoint id="endpoint2_286" group="QMRF 2. Environmental fate parameters" subgroup="" name="QMRF 2. 4.a. Bioconcentration . BCF fish" />
+    <endpoint id="endpoint2_287" group="QMRF 2. Environmental fate parameters" subgroup="" name="QMRF 2. 4.b. Bioconcentration . BCF other organisms" />
+    <endpoint id="endpoint2_288" group="QMRF 2. Environmental fate parameters" subgroup="" name="QMRF 2. 5.a. Bioaccumulation. BAF fish" />
+    <endpoint id="endpoint2_289" group="QMRF 2. Environmental fate parameters" subgroup="" name="QMRF 2. 5.b. Bioaccumulation. BAF other organisms" />
+    <endpoint id="endpoint2_290" group="QMRF 2. Environmental fate parameters" subgroup="" name="QMRF 2. 6. Partition coefficient. Organic carbon-sorption partition coefficient (organic carbon; Koc)" />
+    <endpoint id="endpoint2_291" group="QMRF 2. Environmental fate parameters" subgroup="" name="QMRF 2. 7. Adsorption/Desorption in soil" />
+    <endpoint id="endpoint2_292" group="QMRF 2. Environmental fate parameters" subgroup="" name="QMRF 2. 8. Adsorption/Desorption in sediment" />
+    <endpoint id="endpoint2_293" group="QMRF 2. Environmental fate parameters" subgroup="" name="QMRF 2. 9. Vegetation-water partition coefficient" />
+    <endpoint id="endpoint2_294" group="QMRF 2. Environmental fate parameters" subgroup="" name="QMRF 2.10. Vegetation-air partition coefficient" />
+    <endpoint id="endpoint2_295" group="QMRF 2. Environmental fate parameters" subgroup="" name="QMRF 2.11. Vegetation-soil partition coefficient" />
+    <endpoint id="endpoint282_149" group="QMRF 2. 2.a. Persistence: Abiotic degradation in air (Phototransformation). Direct photolysis" subgroup="" name="OECD 316 Phototransformation in Surface water (direct photolysis)" />
+    <endpoint id="endpoint284_268" group="QMRF 2. 3.a. Persistence: Biodegradation. Ready/not ready biodegradability" subgroup="" name="EC  Ready Biodegradability - CO2 in Sealed Vessels (Headspace Test)" />
+    <endpoint id="endpoint284_252" group="QMRF 2. 3.a. Persistence: Biodegradation. Ready/not ready biodegradability" subgroup="" name="EC C. 4. Biodegradation: Determination of the 'ready' Biodegradability" />
+    <endpoint id="endpoint284_253" group="QMRF 2. 3.a. Persistence: Biodegradation. Ready/not ready biodegradability" subgroup="" name="EC C.4-A Dissolved Organic Carbon (DOC) Die-Away" />
+    <endpoint id="endpoint284_257" group="QMRF 2. 3.a. Persistence: Biodegradation. Ready/not ready biodegradability" subgroup="" name="EC C.4-B Modified OECD Screening Test" />
+    <endpoint id="endpoint284_254" group="QMRF 2. 3.a. Persistence: Biodegradation. Ready/not ready biodegradability" subgroup="" name="EC C.4-C Carbon Dioxide (CO2) Evolution" />
+    <endpoint id="endpoint284_258" group="QMRF 2. 3.a. Persistence: Biodegradation. Ready/not ready biodegradability" subgroup="" name="EC C.4-D Monometric Respirometry" />
+    <endpoint id="endpoint284_256" group="QMRF 2. 3.a. Persistence: Biodegradation. Ready/not ready biodegradability" subgroup="" name="EC C.4-E Closed Bottle" />
+    <endpoint id="endpoint284_255" group="QMRF 2. 3.a. Persistence: Biodegradation. Ready/not ready biodegradability" subgroup="" name="EC C.4-F MITI (Ministry of International Trade and Industry-Japan)" />
+    <endpoint id="endpoint284_122" group="QMRF 2. 3.a. Persistence: Biodegradation. Ready/not ready biodegradability" subgroup="" name="OECD 301 Ready Biodegradability" />
+    <endpoint id="endpoint284_123" group="QMRF 2. 3.a. Persistence: Biodegradation. Ready/not ready biodegradability" subgroup="" name="OECD 301A DOC Die-Away Test" />
+    <endpoint id="endpoint284_124" group="QMRF 2. 3.a. Persistence: Biodegradation. Ready/not ready biodegradability" subgroup="" name="OECD 301B CO2 Evolution Test" />
+    <endpoint id="endpoint284_125" group="QMRF 2. 3.a. Persistence: Biodegradation. Ready/not ready biodegradability" subgroup="" name="OECD 301C Modified MITI (I) Test" />
+    <endpoint id="endpoint284_126" group="QMRF 2. 3.a. Persistence: Biodegradation. Ready/not ready biodegradability" subgroup="" name="OECD 301D Closed Bottle Test" />
+    <endpoint id="endpoint284_127" group="QMRF 2. 3.a. Persistence: Biodegradation. Ready/not ready biodegradability" subgroup="" name="OECD 301E Modified OECD Screening Test" />
+    <endpoint id="endpoint284_128" group="QMRF 2. 3.a. Persistence: Biodegradation. Ready/not ready biodegradability" subgroup="" name="OECD 301F Monometric Respiratory Test" />
+    <endpoint id="endpoint284_143" group="QMRF 2. 3.a. Persistence: Biodegradation. Ready/not ready biodegradability" subgroup="" name="OECD 310 Ready Biodegradability - CO2 in Sealed Vessels (Headspace Test)" />
+    <endpoint id="endpoint285_267" group="QMRF 2. 3.b. Persistence: Biodegradation. Biodegradation time frame (primary, ultimate degradation)" subgroup="" name="EC  Aerobic Mineralisation in Surface Water-Simulation Biodegradation Test" />
+    <endpoint id="endpoint285_269" group="QMRF 2. 3.b. Persistence: Biodegradation. Biodegradation time frame (primary, ultimate degradation)" subgroup="" name="EC  Anaerobic Biodegradability of Organic Compounds in Digested Sludge: by Measurement of Gas Production" />
+    <endpoint id="endpoint285_263" group="QMRF 2. 3.b. Persistence: Biodegradation. Biodegradation time frame (primary, ultimate degradation)" subgroup="" name="EC C. 5. Degradation : Biochemical Oxygen Demand" />
+    <endpoint id="endpoint285_264" group="QMRF 2. 3.b. Persistence: Biodegradation. Biodegradation time frame (primary, ultimate degradation)" subgroup="" name="EC C. 6. Degradation: Chemical Oxygen Demand" />
+    <endpoint id="endpoint285_260" group="QMRF 2. 3.b. Persistence: Biodegradation. Biodegradation time frame (primary, ultimate degradation)" subgroup="" name="EC C. 9. Biodegradation: Zahn-Wellens Test" />
+    <endpoint id="endpoint285_261" group="QMRF 2. 3.b. Persistence: Biodegradation. Biodegradation time frame (primary, ultimate degradation)" subgroup="" name="EC C.10. Biodegradation: Activated Sludge Simulation Tests" />
+    <endpoint id="endpoint285_259" group="QMRF 2. 3.b. Persistence: Biodegradation. Biodegradation time frame (primary, ultimate degradation)" subgroup="" name="EC C.12. Biodegradation: Modified SCAS Test" />
+    <endpoint id="endpoint285_266" group="QMRF 2. 3.b. Persistence: Biodegradation. Biodegradation time frame (primary, ultimate degradation)" subgroup="" name="EC C.24 Aerobic and Anaerobic Transformation in Aquatic Sediment Systems" />
+    <endpoint id="endpoint285_113" group="QMRF 2. 3.b. Persistence: Biodegradation. Biodegradation time frame (primary, ultimate degradation)" subgroup="" name="OECD 224 Determination of the Acvtivity of anaerobic bacteria - reduction of gas production from anaerobic sewage sludge" />
+    <endpoint id="endpoint285_129" group="QMRF 2. 3.b. Persistence: Biodegradation. Biodegradation time frame (primary, ultimate degradation)" subgroup="" name="OECD 302 Inherent Biodegradability:" />
+    <endpoint id="endpoint285_130" group="QMRF 2. 3.b. Persistence: Biodegradation. Biodegradation time frame (primary, ultimate degradation)" subgroup="" name="OECD 302A Modified SCAS Test" />
+    <endpoint id="endpoint285_131" group="QMRF 2. 3.b. Persistence: Biodegradation. Biodegradation time frame (primary, ultimate degradation)" subgroup="" name="OECD 302B Zahn-Wellens/EMPA Test" />
+    <endpoint id="endpoint285_132" group="QMRF 2. 3.b. Persistence: Biodegradation. Biodegradation time frame (primary, ultimate degradation)" subgroup="" name="OECD 302C Modified MITI (II) Test" />
+    <endpoint id="endpoint285_133" group="QMRF 2. 3.b. Persistence: Biodegradation. Biodegradation time frame (primary, ultimate degradation)" subgroup="" name="OECD 302D Inherent Biodegradability - Concawe Test" />
+    <endpoint id="endpoint285_134" group="QMRF 2. 3.b. Persistence: Biodegradation. Biodegradation time frame (primary, ultimate degradation)" subgroup="" name="OECD 303 Simulation Test - Aerobic Sewage Treatment" />
+    <endpoint id="endpoint285_135" group="QMRF 2. 3.b. Persistence: Biodegradation. Biodegradation time frame (primary, ultimate degradation)" subgroup="" name="OECD 303A Activated Sludge Units" />
+    <endpoint id="endpoint285_136" group="QMRF 2. 3.b. Persistence: Biodegradation. Biodegradation time frame (primary, ultimate degradation)" subgroup="" name="OECD 303B Biofilms" />
+    <endpoint id="endpoint285_137" group="QMRF 2. 3.b. Persistence: Biodegradation. Biodegradation time frame (primary, ultimate degradation)" subgroup="" name="OECD 304A Inherent Biodegradability in Soil" />
+    <endpoint id="endpoint285_139" group="QMRF 2. 3.b. Persistence: Biodegradation. Biodegradation time frame (primary, ultimate degradation)" subgroup="" name="OECD 306 Biodegradability in Seawater" />
+    <endpoint id="endpoint285_141" group="QMRF 2. 3.b. Persistence: Biodegradation. Biodegradation time frame (primary, ultimate degradation)" subgroup="" name="OECD 308 Aerobic and anaerobic transformation in water-sediment systems" />
+    <endpoint id="endpoint285_142" group="QMRF 2. 3.b. Persistence: Biodegradation. Biodegradation time frame (primary, ultimate degradation)" subgroup="" name="OECD 309 Aerobic Mineralisation in Surface Water-Simulation Biodegradation Test" />
+    <endpoint id="endpoint285_144" group="QMRF 2. 3.b. Persistence: Biodegradation. Biodegradation time frame (primary, ultimate degradation)" subgroup="" name="OECD 311 Anaerobic Biodegradability of Organic Compounds in Digested Sludge - Method by Measurement of Gas Production" />
+    <endpoint id="endpoint285_146" group="QMRF 2. 3.b. Persistence: Biodegradation. Biodegradation time frame (primary, ultimate degradation)" subgroup="" name="OECD 313 Estimation of Emissions from PreservativeTreated Wood to the Environment:  Laboratory Method for Wooden Commodities that are not covered and are in Contact with Fresh Water or Seawater" />
+    <endpoint id="endpoint285_147" group="QMRF 2. 3.b. Persistence: Biodegradation. Biodegradation time frame (primary, ultimate degradation)" subgroup="" name="OECD 314 Simulation Tests to Assess the Biodegradability of Chemicals Discharged in Wastewater" />
+    <endpoint id="endpoint286_262" group="QMRF 2. 4.a. Bioconcentration . BCF fish" subgroup="" name="EC C.13 Bioconcentration: Flow-through Fish Test" />
+    <endpoint id="endpoint286_138" group="QMRF 2. 4.a. Bioconcentration . BCF fish" subgroup="" name="OECD 305 Bioconcentration: Flow-through Fish Test" />
+    <endpoint id="endpoint291_145" group="QMRF 2. 7. Adsorption/Desorption in soil" subgroup="" name="OECD 312 Leaching in soil columns" />
+    <endpoint id="endpoint3_296" group="QMRF 3. Ecotoxic effects" subgroup="" name="QMRF 3. 1. Short-term toxicity to Daphnia (immobilisation)" />
+    <endpoint id="endpoint3_297" group="QMRF 3. Ecotoxic effects" subgroup="" name="QMRF 3. 2. Short-term toxicity to algae (inhibition of the exponential growth rate)" />
+    <endpoint id="endpoint3_298" group="QMRF 3. Ecotoxic effects" subgroup="" name="QMRF 3. 3. Acute toxicity to fish (lethality)" />
+    <endpoint id="endpoint3_299" group="QMRF 3. Ecotoxic effects" subgroup="" name="QMRF 3. 4. Long-term toxicity to Daphnia (lethality, inhibition of reproduction)" />
+    <endpoint id="endpoint3_300" group="QMRF 3. Ecotoxic effects" subgroup="" name="QMRF 3. 5. Long-term toxicity to fish (egg/sac fry, growth inhibition of juvenile fish, early life stage, full life cycle)" />
+    <endpoint id="endpoint3_301" group="QMRF 3. Ecotoxic effects" subgroup="" name="QMRF 3. 6. Microbial inhibition (activated sludge respiration inhibition, inhibition of nitrification, other)" />
+    <endpoint id="endpoint3_302" group="QMRF 3. Ecotoxic effects" subgroup="" name="QMRF 3. 7. Toxicity to soil microorganisms (inhibition of C-mineralisation, inhibition of N-mineralisation, other)" />
+    <endpoint id="endpoint3_303" group="QMRF 3. Ecotoxic effects" subgroup="" name="QMRF 3. 8. Toxicity to earthworms (survival, growth, reproduction)" />
+    <endpoint id="endpoint3_304" group="QMRF 3. Ecotoxic effects" subgroup="" name="QMRF 3. 9. Toxicity to plants (leaves, seed germination, root elongation)" />
+    <endpoint id="endpoint3_305" group="QMRF 3. Ecotoxic effects" subgroup="" name="QMRF 3.10. Toxicity to soil invertebrates (survival, growth, reproduction)" />
+    <endpoint id="endpoint3_306" group="QMRF 3. Ecotoxic effects" subgroup="" name="QMRF 3.11. Toxicity to sediment organisms (survival, growth, reproduction)" />
+    <endpoint id="endpoint3_307" group="QMRF 3. Ecotoxic effects" subgroup="" name="QMRF 3.12.a Toxicity to birds. Short term toxicity (feeding, gavage, other)" />
+    <endpoint id="endpoint3_308" group="QMRF 3. Ecotoxic effects" subgroup="" name="QMRF 3.12.b. Toxicity to birds. Long-term toxicity (survival, growth, reproduction)" />
+    <endpoint id="endpoint3_359" group="QMRF 3. Ecotoxic effects" subgroup="" name="QMRF 3.13.a. Toxicity to honeybees. Acute oral toxicity" />
+    <endpoint id="endpoint3_360" group="QMRF 3. Ecotoxic effects" subgroup="" name="QMRF 3.13.b. Toxicity to honeybees. Acute contact toxicity" />
+    <endpoint id="endpoint296_236" group="QMRF 3. 1. Short-term toxicity to Daphnia (immobilisation)" subgroup="" name="EC C. 2. Daphnia sp Acute Immobilisation Test" />
+    <endpoint id="endpoint296_92" group="QMRF 3. 1. Short-term toxicity to Daphnia (immobilisation)" subgroup="" name="OECD 202 Daphnia sp Acute Immobilisation Test" />
+    <endpoint id="endpoint297_235" group="QMRF 3. 2. Short-term toxicity to algae (inhibition of the exponential growth rate)" subgroup="" name="EC C. 3. Freshwater Algae and Cyanobacteria, Growth Inhibition Test" />
+    <endpoint id="endpoint297_91" group="QMRF 3. 2. Short-term toxicity to algae (inhibition of the exponential growth rate)" subgroup="" name="OECD 201 Alga Growth Inhibition Test" />
+    <endpoint id="endpoint298_237" group="QMRF 3. 3. Acute toxicity to fish (lethality)" subgroup="" name="EC C. 1. Acute Toxicity for Fish" />
+    <endpoint id="endpoint298_93" group="QMRF 3. 3. Acute toxicity to fish (lethality)" subgroup="" name="OECD 203 Fish, Acute Toxicity Test" />
+    <endpoint id="endpoint299_240" group="QMRF 3. 4. Long-term toxicity to Daphnia (lethality, inhibition of reproduction)" subgroup="" name="EC C.20 Daphnia magna Reproduction Test" />
+    <endpoint id="endpoint299_101" group="QMRF 3. 4. Long-term toxicity to Daphnia (lethality, inhibition of reproduction)" subgroup="" name="OECD 211 Daphnia magna Reproduction Test" />
+    <endpoint id="endpoint300_244" group="QMRF 3. 5. Long-term toxicity to fish (egg/sac fry, growth inhibition of juvenile fish, early life stage, full life cycle)" subgroup="" name="EC C.14 Fish, Juvenile Growth Tes" />
+    <endpoint id="endpoint300_241" group="QMRF 3. 5. Long-term toxicity to fish (egg/sac fry, growth inhibition of juvenile fish, early life stage, full life cycle)" subgroup="" name="EC C.15. Fish, Short-term Toxicity Test on Embryo and Sac-fry Stages" />
+    <endpoint id="endpoint300_94" group="QMRF 3. 5. Long-term toxicity to fish (egg/sac fry, growth inhibition of juvenile fish, early life stage, full life cycle)" subgroup="" name="OECD 204 Fish, Prolonged Toxicity Test: 14-Day Study" />
+    <endpoint id="endpoint300_100" group="QMRF 3. 5. Long-term toxicity to fish (egg/sac fry, growth inhibition of juvenile fish, early life stage, full life cycle)" subgroup="" name="OECD 210 Fish, Early-Life Stage Toxicity Test" />
+    <endpoint id="endpoint300_102" group="QMRF 3. 5. Long-term toxicity to fish (egg/sac fry, growth inhibition of juvenile fish, early life stage, full life cycle)" subgroup="" name="OECD 212 Fish, Short-term Toxicity Test on Embryo and Sac-fry Stages" />
+    <endpoint id="endpoint300_105" group="QMRF 3. 5. Long-term toxicity to fish (egg/sac fry, growth inhibition of juvenile fish, early life stage, full life cycle)" subgroup="" name="OECD 215 Fish, Juvenile Growth Test" />
+    <endpoint id="endpoint300_119" group="QMRF 3. 5. Long-term toxicity to fish (egg/sac fry, growth inhibition of juvenile fish, early life stage, full life cycle)" subgroup="" name="OECD 2XX Fish Short Term Reproduction Assay" />
+    <endpoint id="endpoint300_120" group="QMRF 3. 5. Long-term toxicity to fish (egg/sac fry, growth inhibition of juvenile fish, early life stage, full life cycle)" subgroup="" name="OECD 2XX The 21-day Fish Assay: A short-term screening for oestrogenic and androgenic activity and aromatase inhibition" />
+    <endpoint id="endpoint301_239" group="QMRF 3. 6. Microbial inhibition (activated sludge respiration inhibition, inhibition of nitrification, other)" subgroup="" name="EC C.11. Biodegradation: Activated Sludge Respiration Inhibition Test" />
+    <endpoint id="endpoint301_99" group="QMRF 3. 6. Microbial inhibition (activated sludge respiration inhibition, inhibition of nitrification, other)" subgroup="" name="OECD 209 Activated Sludge, Respiration Inhibition Test" />
+    <endpoint id="endpoint302_245" group="QMRF 3. 7. Toxicity to soil microorganisms (inhibition of C-mineralisation, inhibition of N-mineralisation, other)" subgroup="" name="EC C.21 Soil Microorganisms: Nitrogen Transformation Test" />
+    <endpoint id="endpoint302_246" group="QMRF 3. 7. Toxicity to soil microorganisms (inhibition of C-mineralisation, inhibition of N-mineralisation, other)" subgroup="" name="EC C.22 Soil Microorganisms: Carbon Transformation Test" />
+    <endpoint id="endpoint302_265" group="QMRF 3. 7. Toxicity to soil microorganisms (inhibition of C-mineralisation, inhibition of N-mineralisation, other)" subgroup="" name="EC C.23 Aerobic and Anaerobic Transformation in Soil" />
+    <endpoint id="endpoint302_106" group="QMRF 3. 7. Toxicity to soil microorganisms (inhibition of C-mineralisation, inhibition of N-mineralisation, other)" subgroup="" name="OECD 216 Soil Microorganisms: Nitrogen Transformation Test" />
+    <endpoint id="endpoint302_107" group="QMRF 3. 7. Toxicity to soil microorganisms (inhibition of C-mineralisation, inhibition of N-mineralisation, other)" subgroup="" name="OECD 217 Soil Microorganisms: Carbon Transformation Test" />
+    <endpoint id="endpoint302_140" group="QMRF 3. 7. Toxicity to soil microorganisms (inhibition of C-mineralisation, inhibition of N-mineralisation, other)" subgroup="" name="OECD 307 Aerobic and anaerobic transformation in soil" />
+    <endpoint id="endpoint303_251" group="QMRF 3. 8. Toxicity to earthworms (survival, growth, reproduction)" subgroup="" name="EC  Earthworm Reproduction Test (Eisenia fetida / Eisenia andrei)" />
+    <endpoint id="endpoint303_238" group="QMRF 3. 8. Toxicity to earthworms (survival, growth, reproduction)" subgroup="" name="EC C. 8. Toxicity for Earthworms: Artificial Soil Test" />
+    <endpoint id="endpoint303_97" group="QMRF 3. 8. Toxicity to earthworms (survival, growth, reproduction)" subgroup="" name="OECD 207 Earthworm, Acute Toxicity Test" />
+    <endpoint id="endpoint303_112" group="QMRF 3. 8. Toxicity to earthworms (survival, growth, reproduction)" subgroup="" name="OECD 222 Earthworm reproduction" />
+    <endpoint id="endpoint304_250" group="QMRF 3. 9. Toxicity to plants (leaves, seed germination, root elongation)" subgroup="" name="EC C.26 Lemna sp Growth Inhibition Test" />
+    <endpoint id="endpoint304_98" group="QMRF 3. 9. Toxicity to plants (leaves, seed germination, root elongation)" subgroup="" name="OECD 208 Terrestrial Plant Test: Seedling Emergence and Seedling Growth Test" />
+    <endpoint id="endpoint304_111" group="QMRF 3. 9. Toxicity to plants (leaves, seed germination, root elongation)" subgroup="" name="OECD 221 Lemna growth inhibition test" />
+    <endpoint id="endpoint304_116" group="QMRF 3. 9. Toxicity to plants (leaves, seed germination, root elongation)" subgroup="" name="OECD 227 Terrestrial Plant Test: Vegetative Vigour Test" />
+    <endpoint id="endpoint305_115" group="QMRF 3.10. Toxicity to soil invertebrates (survival, growth, reproduction)" subgroup="" name="OECD 226 Predatory Mite(Hypoaspis (Geolaelaps) Aculeifer Reproduction Test in Soil" />
+    <endpoint id="endpoint305_118" group="QMRF 3.10. Toxicity to soil invertebrates (survival, growth, reproduction)" subgroup="" name="OECD 229 Collembolan Reproduction Test in Soils" />
+    <endpoint id="endpoint306_247" group="QMRF 3.11. Toxicity to sediment organisms (survival, growth, reproduction)" subgroup="" name="EC  Sediment-Water Chironomid Toxicity Test Using Spiked Sediment" />
+    <endpoint id="endpoint306_248" group="QMRF 3.11. Toxicity to sediment organisms (survival, growth, reproduction)" subgroup="" name="EC  Sediment-Water Chironomid Toxicity Test Using Spiked Water" />
+    <endpoint id="endpoint306_249" group="QMRF 3.11. Toxicity to sediment organisms (survival, growth, reproduction)" subgroup="" name="EC  Enchytraeid Reproduction Test" />
+    <endpoint id="endpoint306_108" group="QMRF 3.11. Toxicity to sediment organisms (survival, growth, reproduction)" subgroup="" name="OECD 218 Chironomidae spiked sediment" />
+    <endpoint id="endpoint306_109" group="QMRF 3.11. Toxicity to sediment organisms (survival, growth, reproduction)" subgroup="" name="OECD 219 Chironomidae spiked water" />
+    <endpoint id="endpoint306_110" group="QMRF 3.11. Toxicity to sediment organisms (survival, growth, reproduction)" subgroup="" name="OECD 220 Enchytraeidae Reproduction Test" />
+    <endpoint id="endpoint306_114" group="QMRF 3.11. Toxicity to sediment organisms (survival, growth, reproduction)" subgroup="" name="OECD 225 Sediment-Water Lumbriculus Toxicity Test Using Spiked Sediment" />
+    <endpoint id="endpoint307_95" group="QMRF 3.12.a Toxicity to birds. Short term toxicity (feeding, gavage, other)" subgroup="" name="OECD 205 Avian Dietary Toxicity Test" />
+    <endpoint id="endpoint308_96" group="QMRF 3.12.b. Toxicity to birds. Long-term toxicity (survival, growth, reproduction)" subgroup="" name="OECD 206 Avian Reproduction Test" />
+    <endpoint id="endpoint359_242" group="QMRF 3.13.a. Toxicity to honeybees. Acute oral toxicity" subgroup="" name="EC C.16. Honeybees-Acute Oral Toxicity" />
+    <endpoint id="endpoint359_103" group="QMRF 3.13.a. Toxicity to honeybees. Acute oral toxicity" subgroup="" name="OECD 213 Honeybees-Acute Oral Toxicity" />
+    <endpoint id="endpoint360_243" group="QMRF 3.13.b. Toxicity to honeybees. Acute contact toxicity" subgroup="" name="EC C.17. Honeybees-Acute Contact Toxicity" />
+    <endpoint id="endpoint360_104" group="QMRF 3.13.b. Toxicity to honeybees. Acute contact toxicity" subgroup="" name="OECD 214 Honeybees-Acute Contact Toxicity" />
+    <endpoint id="endpoint4_309" group="QMRF 4. Human Health Effects" subgroup="" name="QMRF 4. 1. Acute Inhalation toxicity" />
+    <endpoint id="endpoint4_310" group="QMRF 4. Human Health Effects" subgroup="" name="QMRF 4. 2. Acute Oral toxicity" />
+    <endpoint id="endpoint4_311" group="QMRF 4. Human Health Effects" subgroup="" name="QMRF 4. 3. Acute Dermal toxicity" />
+    <endpoint id="endpoint4_312" group="QMRF 4. Human Health Effects" subgroup="" name="QMRF 4. 4. Skin irritation /corrosion" />
+    <endpoint id="endpoint4_313" group="QMRF 4. Human Health Effects" subgroup="" name="QMRF 4. 5. Acute photoirritation" />
+    <endpoint id="endpoint4_314" group="QMRF 4. Human Health Effects" subgroup="" name="QMRF 4. 6. Skin sensitisation" />
+    <endpoint id="endpoint4_315" group="QMRF 4. Human Health Effects" subgroup="" name="QMRF 4. 7. Respiratory sensitisation" />
+    <endpoint id="endpoint4_316" group="QMRF 4. Human Health Effects" subgroup="" name="QMRF 4. 8. Photosensitisation" />
+    <endpoint id="endpoint4_317" group="QMRF 4. Human Health Effects" subgroup="" name="QMRF 4. 9. Eye irritation/corrosion" />
+    <endpoint id="endpoint4_318" group="QMRF 4. Human Health Effects" subgroup="" name="QMRF 4.10. Mutagenicity" />
+    <endpoint id="endpoint4_319" group="QMRF 4. Human Health Effects" subgroup="" name="QMRF 4.11. Photomutagenicity" />
+    <endpoint id="endpoint4_320" group="QMRF 4. Human Health Effects" subgroup="" name="QMRF 4.12. Carcinogenicity" />
+    <endpoint id="endpoint4_321" group="QMRF 4. Human Health Effects" subgroup="" name="QMRF 4.13. Photocarcinogenicity" />
+    <endpoint id="endpoint4_322" group="QMRF 4. Human Health Effects" subgroup="" name="QMRF 4.14. Repeated dose toxicity" />
+    <endpoint id="endpoint4_323" group="QMRF 4. Human Health Effects" subgroup="" name="QMRF 4.15. In vitro reproductive toxicity (e.g. embryotoxic effects in cell culture such as embryo stem cells)" />
+    <endpoint id="endpoint4_324" group="QMRF 4. Human Health Effects" subgroup="" name="QMRF 4.16. In vivo pre-natal-developmental toxicity" />
+    <endpoint id="endpoint4_325" group="QMRF 4. Human Health Effects" subgroup="" name="QMRF 4.17. In vivo pre-, peri-, post natal development and / or fertility (1 or 2 generation" />
+    <endpoint id="endpoint4_326" group="QMRF 4. Human Health Effects" subgroup="" name="QMRF 4.18.a. Endocrine Activity. Receptor-binding (specify receptor)" />
+    <endpoint id="endpoint4_327" group="QMRF 4. Human Health Effects" subgroup="" name="QMRF 4.18.b. Receptor binding and gene expression (specify receptor)" />
+    <endpoint id="endpoint4_328" group="QMRF 4. Human Health Effects" subgroup="" name="QMRF 4.18.c. Endocrine Activity. Other (e.g.  inhibition of specific enzymes involved in hormone synthesis or regulation, specify enzyme(s) and hormone)" />
+    <endpoint id="endpoint4_357" group="QMRF 4. Human Health Effects" subgroup="" name="QMRF 4.19. Neurotoxicity" />
+    <endpoint id="endpoint309_189" group="QMRF 4. 1. Acute Inhalation toxicity" subgroup="" name="EC B.2 Acute Toxicity (Inhalation)" />
+    <endpoint id="endpoint309_31" group="QMRF 4. 1. Acute Inhalation toxicity" subgroup="" name="OECD 403 Acute Inhalation Toxicity" />
+    <endpoint id="endpoint309_62" group="QMRF 4. 1. Acute Inhalation toxicity" subgroup="" name="OECD 433 DRAFT Acute Inhalation Toxicity FCP" />
+    <endpoint id="endpoint309_64" group="QMRF 4. 1. Acute Inhalation toxicity" subgroup="" name="OECD 436 DRAFT Acute Inhalation Toxicity - ATC Method" />
+    <endpoint id="endpoint310_187" group="QMRF 4. 2. Acute Oral toxicity" subgroup="" name="EC B. 1. Acute Toxicity (Oral)" />
+    <endpoint id="endpoint310_206" group="QMRF 4. 2. Acute Oral toxicity" subgroup="" name="EC B. 1.bis. Acute Toxicity (Oral) Fixed Dose Method" />
+    <endpoint id="endpoint310_207" group="QMRF 4. 2. Acute Oral toxicity" subgroup="" name="EC B. 1.tris. Acute Toxicity (Oral) Acute Toxic Class Method" />
+    <endpoint id="endpoint310_29" group="QMRF 4. 2. Acute Oral toxicity" subgroup="" name="OECD 401 Acute Oral Toxicity DELETED" />
+    <endpoint id="endpoint310_49" group="QMRF 4. 2. Acute Oral toxicity" subgroup="" name="OECD 420 Acute Oral Toxicity-Fixed Dose Method" />
+    <endpoint id="endpoint310_52" group="QMRF 4. 2. Acute Oral toxicity" subgroup="" name="OECD 423 Acute Oral Toxicity - Acute Toxic Class Method" />
+    <endpoint id="endpoint310_54" group="QMRF 4. 2. Acute Oral toxicity" subgroup="" name="OECD 425 Acute Oral Toxicity: Up-and-Down Procedure" />
+    <endpoint id="endpoint311_188" group="QMRF 4. 3. Acute Dermal toxicity" subgroup="" name="EC B. 3. Acute Toxicity (Dermal)" />
+    <endpoint id="endpoint311_30" group="QMRF 4. 3. Acute Dermal toxicity" subgroup="" name="OECD 402 Acute Dermal Toxicity" />
+    <endpoint id="endpoint312_190" group="QMRF 4. 4. Skin irritation /corrosion" subgroup="" name="EC B.4 Acute Toxicity (Skin Irritation)" />
+    <endpoint id="endpoint312_213" group="QMRF 4. 4. Skin irritation /corrosion" subgroup="" name="EC B.40 bis. In Vitro Skin Corrosion: HSM" />
+    <endpoint id="endpoint312_212" group="QMRF 4. 4. Skin irritation /corrosion" subgroup="" name="EC B.40. In Vitro Skin Corrosion: TER" />
+    <endpoint id="endpoint312_218" group="QMRF 4. 4. Skin irritation /corrosion" subgroup="" name="EC B.46. In vitro Skin Irritation Reconstructed Human Epidermis (RhE) Test Method" />
+    <endpoint id="endpoint312_32" group="QMRF 4. 4. Skin irritation /corrosion" subgroup="" name="OECD 404 Acute Dermal Irritation/Corrosion" />
+    <endpoint id="endpoint312_59" group="QMRF 4. 4. Skin irritation /corrosion" subgroup="" name="OECD 430 In vitro Skin Corrosion (TER)" />
+    <endpoint id="endpoint312_60" group="QMRF 4. 4. Skin irritation /corrosion" subgroup="" name="OECD 431 In vitro Skin Corrosion (HSM)" />
+    <endpoint id="endpoint312_63" group="QMRF 4. 4. Skin irritation /corrosion" subgroup="" name="OECD 435 In Vitro Membrane Barrier Test Method for Skin Corrosion" />
+    <endpoint id="endpoint312_72" group="QMRF 4. 4. Skin irritation /corrosion" subgroup="" name="OECD 4XX In vitro Skin Irritation Reconstructed Human Epidermis (RhE) Test Method" />
+    <endpoint id="endpoint313_214" group="QMRF 4. 5. Acute photoirritation" subgroup="" name="EC B.41. 3T3 NRU Phototoxicity Test" />
+    <endpoint id="endpoint313_61" group="QMRF 4. 5. Acute photoirritation" subgroup="" name="OECD 432 In Vitro 3T3 NRU Phototoxicity Test" />
+    <endpoint id="endpoint314_192" group="QMRF 4. 6. Skin sensitisation" subgroup="" name="EC B. 6. Skin Sensitisation" />
+    <endpoint id="endpoint314_211" group="QMRF 4. 6. Skin sensitisation" subgroup="" name="EC B.42. Skin Sensitisation: Local Lymph Node Assay" />
+    <endpoint id="endpoint314_34" group="QMRF 4. 6. Skin sensitisation" subgroup="" name="OECD 406 Skin Sensitisation" />
+    <endpoint id="endpoint314_58" group="QMRF 4. 6. Skin sensitisation" subgroup="" name="OECD 429 LLNA" />
+    <endpoint id="endpoint317_191" group="QMRF 4. 9. Eye irritation/corrosion" subgroup="" name="EC B. 5. Acute Toxicity (Eye Irritation)" />
+    <endpoint id="endpoint317_33" group="QMRF 4. 9. Eye irritation/corrosion" subgroup="" name="OECD 405 Acute Eye Irritation/Corrosion" />
+    <endpoint id="endpoint317_65" group="QMRF 4. 9. Eye irritation/corrosion" subgroup="" name="OECD 437 The Bovine Corneal Opacity and Permeability (BCOP) Test Mehod for Identifying Eye Corrosives and Severe Irritants" />
+    <endpoint id="endpoint317_66" group="QMRF 4. 9. Eye irritation/corrosion" subgroup="" name="OECD 438 The Isolated Chicken Eye (ICE) Test Method for Identifying Ocular Corrosives and Severe Irritants" />
+    <endpoint id="endpoint318_220" group="QMRF 4.10. Mutagenicity" subgroup="" name="EC B.10. Mutagenicity - In Vitro Mammalian Chromosome Aberration Test" />
+    <endpoint id="endpoint318_222" group="QMRF 4.10. Mutagenicity" subgroup="" name="EC B.11. Mutagenicity In Vivo Mammalian Bone Marrow Chromosome Aberration Test" />
+    <endpoint id="endpoint318_221" group="QMRF 4.10. Mutagenicity" subgroup="" name="EC B.12. Mutagenicity In Vivo Mamm Erythrocyte Micronucleus Test" />
+    <endpoint id="endpoint318_219" group="QMRF 4.10. Mutagenicity" subgroup="" name="EC B.13/14. Mutagenicity: Reverse Mutation Test Using Bacteria" />
+    <endpoint id="endpoint318_227" group="QMRF 4.10. Mutagenicity" subgroup="" name="EC B.15. Gene Mutation Saccharomyces Cerevisiae" />
+    <endpoint id="endpoint318_228" group="QMRF 4.10. Mutagenicity" subgroup="" name="EC B.16. Mitotic Recombination Saccharomyces Cerevisiae" />
+    <endpoint id="endpoint318_223" group="QMRF 4.10. Mutagenicity" subgroup="" name="EC B.17. In Vitro Mammalian Cell Gene Mutation Test" />
+    <endpoint id="endpoint318_229" group="QMRF 4.10. Mutagenicity" subgroup="" name="EC B.18. DNA Damage and Repair-Unscheduled DNA Synthesis - Mammalian Cells in Vitro" />
+    <endpoint id="endpoint318_226" group="QMRF 4.10. Mutagenicity" subgroup="" name="EC B.19. Sister Chromatid Exchange Assay In Vitro" />
+    <endpoint id="endpoint318_224" group="QMRF 4.10. Mutagenicity" subgroup="" name="EC B.20. Sex-Linked recessive Lethal Test in Drosophila Melanogaster" />
+    <endpoint id="endpoint318_233" group="QMRF 4.10. Mutagenicity" subgroup="" name="EC B.21. In vitro Mammalian Cell Transformation Tests" />
+    <endpoint id="endpoint318_225" group="QMRF 4.10. Mutagenicity" subgroup="" name="EC B.22. Rodent Dominant Lethal test" />
+    <endpoint id="endpoint318_230" group="QMRF 4.10. Mutagenicity" subgroup="" name="EC B.23. Mammalian Spermatogonial Chromosome Aberration Test" />
+    <endpoint id="endpoint318_231" group="QMRF 4.10. Mutagenicity" subgroup="" name="EC B.24. Mouse Spot Test" />
+    <endpoint id="endpoint318_232" group="QMRF 4.10. Mutagenicity" subgroup="" name="EC B.25. Mouse Heritable Translocation" />
+    <endpoint id="endpoint318_234" group="QMRF 4.10. Mutagenicity" subgroup="" name="EC B.39. Unscheduled DNA Syntesis (UDS) Test with Mammalian Liver Cells In Vivo" />
+    <endpoint id="endpoint318_74" group="QMRF 4.10. Mutagenicity" subgroup="" name="OECD 471 Bacterial Reverse Mutation Test" />
+    <endpoint id="endpoint318_76" group="QMRF 4.10. Mutagenicity" subgroup="" name="OECD 473 In Vitro Mammalian Chromosome Aberration Test" />
+    <endpoint id="endpoint318_77" group="QMRF 4.10. Mutagenicity" subgroup="" name="OECD 474 Mamm Erythrocyte Micronucleus Test" />
+    <endpoint id="endpoint318_78" group="QMRF 4.10. Mutagenicity" subgroup="" name="OECD 475 Mammalian Bone Marrow Chromosome Aberration Test" />
+    <endpoint id="endpoint318_79" group="QMRF 4.10. Mutagenicity" subgroup="" name="OECD 476 In Vitro Mammalian Cell Gene Mutation Test" />
+    <endpoint id="endpoint318_80" group="QMRF 4.10. Mutagenicity" subgroup="" name="OECD 477 Sex-Linked recessive Lethal Test in Drosophila Melanogaster" />
+    <endpoint id="endpoint318_81" group="QMRF 4.10. Mutagenicity" subgroup="" name="OECD 478 Rodent Dominant Lethal test" />
+    <endpoint id="endpoint318_82" group="QMRF 4.10. Mutagenicity" subgroup="" name="OECD 479 In Vitro Sister Chromatid Exchange Assay in Mammalian Cells" />
+    <endpoint id="endpoint318_83" group="QMRF 4.10. Mutagenicity" subgroup="" name="OECD 480 Saccharomyces Cerevisiae, Gene Mutation Assay" />
+    <endpoint id="endpoint318_84" group="QMRF 4.10. Mutagenicity" subgroup="" name="OECD 481 Saccharomyces Cerevisiae, Mitotic Recombination Assay" />
+    <endpoint id="endpoint318_85" group="QMRF 4.10. Mutagenicity" subgroup="" name="OECD 482 DNA Damage and Repair, Unscheduled DNA Synthesis in Mammalian Cells in Vitro" />
+    <endpoint id="endpoint318_86" group="QMRF 4.10. Mutagenicity" subgroup="" name="OECD 483 Mammalian Spermatogonial Chromosome Aberration Test" />
+    <endpoint id="endpoint318_87" group="QMRF 4.10. Mutagenicity" subgroup="" name="OECD 484 Mouse Spot Test" />
+    <endpoint id="endpoint318_88" group="QMRF 4.10. Mutagenicity" subgroup="" name="OECD 485 Mouse Heritable Translocation Assay" />
+    <endpoint id="endpoint318_89" group="QMRF 4.10. Mutagenicity" subgroup="" name="OECD 486 Unscheduled DNA Syntesis (UDS) Test with Mammalian Liver Cells In Vivo" />
+    <endpoint id="endpoint318_90" group="QMRF 4.10. Mutagenicity" subgroup="" name="OECD 487 In vitro Micronucleous Test" />
+    <endpoint id="endpoint320_215" group="QMRF 4.12. Carcinogenicity" subgroup="" name="EC B.32. Carcinogenicity Test" />
+    <endpoint id="endpoint320_217" group="QMRF 4.12. Carcinogenicity" subgroup="" name="EC B.33. Combined Chronic Toxicity/Carcinogenicity Test" />
+    <endpoint id="endpoint320_69" group="QMRF 4.12. Carcinogenicity" subgroup="" name="OECD 451 Carcinogenicity Studies" />
+    <endpoint id="endpoint320_71" group="QMRF 4.12. Carcinogenicity" subgroup="" name="OECD 453 Combined Chronic Toxicity/Carcinogenicity Studies" />
+    <endpoint id="endpoint322_193" group="QMRF 4.14. Repeated dose toxicity" subgroup="" name="EC B. 7. Repeated Dose (28 Days) Toxicity (Oral)" />
+    <endpoint id="endpoint322_198" group="QMRF 4.14. Repeated dose toxicity" subgroup="" name="EC B. 8. Repeated Dose (28 Days) Toxicity Inhalation" />
+    <endpoint id="endpoint322_196" group="QMRF 4.14. Repeated dose toxicity" subgroup="" name="EC B. 9. Repeated Dose (28 Days) Toxicity (Dermal)" />
+    <endpoint id="endpoint322_194" group="QMRF 4.14. Repeated dose toxicity" subgroup="" name="EC B.26. Repeated Dose 90-day Oral Toxicity Study in Rodents" />
+    <endpoint id="endpoint322_195" group="QMRF 4.14. Repeated dose toxicity" subgroup="" name="EC B.27. Repeated Dose 90-day Oral Toxicity Study in Non-Rodents" />
+    <endpoint id="endpoint322_197" group="QMRF 4.14. Repeated dose toxicity" subgroup="" name="EC B.28. Subchronic Dermal Toxicity Study: 90-Day Repeated Dermal Dose Study Using Rodent Species" />
+    <endpoint id="endpoint322_199" group="QMRF 4.14. Repeated dose toxicity" subgroup="" name="EC B.29. Subchronic Inhalation Toxicity Study: 90-Day Repeated Inhalation Dose Study Using Rodent Species" />
+    <endpoint id="endpoint322_216" group="QMRF 4.14. Repeated dose toxicity" subgroup="" name="EC B.30. Chronic Toxicity Test" />
+    <endpoint id="endpoint322_35" group="QMRF 4.14. Repeated dose toxicity" subgroup="" name="OECD 407 Repeated Dose Oral Toxicity-Rodent 28/14-Days" />
+    <endpoint id="endpoint322_36" group="QMRF 4.14. Repeated dose toxicity" subgroup="" name="OECD 408 Repeated Dose 90-day Oral Toxicity Study in Rodents" />
+    <endpoint id="endpoint322_37" group="QMRF 4.14. Repeated dose toxicity" subgroup="" name="OECD 409 Repeated Dose 90-day Oral Toxicity Study in Non-Rodents" />
+    <endpoint id="endpoint322_38" group="QMRF 4.14. Repeated dose toxicity" subgroup="" name="OECD 410 Repeated Dose Dermal Toxicity: 21/28 Day" />
+    <endpoint id="endpoint322_39" group="QMRF 4.14. Repeated dose toxicity" subgroup="" name="OECD 411 Subchronic Dermal Toxicity: 90-Day" />
+    <endpoint id="endpoint322_40" group="QMRF 4.14. Repeated dose toxicity" subgroup="" name="OECD 412 Repeated Dose Inhalation Toxicity: 28/14-Day" />
+    <endpoint id="endpoint322_41" group="QMRF 4.14. Repeated dose toxicity" subgroup="" name="OECD 413 Subchronic Inhalation Toxicity: 90-Day" />
+    <endpoint id="endpoint322_51" group="QMRF 4.14. Repeated dose toxicity" subgroup="" name="OECD 422 Combined Repeated Dose Toxicity Study with the Reproduction/Developmental Toxicity Screening Test" />
+    <endpoint id="endpoint322_70" group="QMRF 4.14. Repeated dose toxicity" subgroup="" name="OECD 452 Chronic Toxicity Studies" />
+    <endpoint id="endpoint324_200" group="QMRF 4.16. In vivo pre-natal-developmental toxicity" subgroup="" name="EC B.31 Teratogenicity Test-Rodent and Non-Rodent" />
+    <endpoint id="endpoint324_43" group="QMRF 4.16. In vivo pre-natal-developmental toxicity" subgroup="" name="OECD  Prenatal Development Study" />
+    <endpoint id="endpoint324_42" group="QMRF 4.16. In vivo pre-natal-developmental toxicity" subgroup="" name="OECD 414 Teratogenicity" />
+    <endpoint id="endpoint325_201" group="QMRF 4.17. In vivo pre-, peri-, post natal development and / or fertility (1 or 2 generation" subgroup="" name="EC B.34. One-Generation Reproduction Toxicity Test" />
+    <endpoint id="endpoint325_202" group="QMRF 4.17. In vivo pre-, peri-, post natal development and / or fertility (1 or 2 generation" subgroup="" name="EC B.35. Two-Generation Reproduction Toxicity Test" />
+    <endpoint id="endpoint325_44" group="QMRF 4.17. In vivo pre-, peri-, post natal development and / or fertility (1 or 2 generation" subgroup="" name="OECD 415 One-Generation Reproduction Toxicity" />
+    <endpoint id="endpoint325_45" group="QMRF 4.17. In vivo pre-, peri-, post natal development and / or fertility (1 or 2 generation" subgroup="" name="OECD 416 Two-Generation Reproduction Toxicity" />
+    <endpoint id="endpoint325_50" group="QMRF 4.17. In vivo pre-, peri-, post natal development and / or fertility (1 or 2 generation" subgroup="" name="OECD 421 Reproduction/Developmental Toxicity Screening Test" />
+    <endpoint id="endpoint325_55" group="QMRF 4.17. In vivo pre-, peri-, post natal development and / or fertility (1 or 2 generation" subgroup="" name="OECD 426 Developmental Neurotoxicity Study" />
+    <endpoint id="endpoint326_67" group="QMRF 4.18.a. Endocrine Activity. Receptor-binding (specify receptor)" subgroup="" name="OECD 440 Uterotrophic Bioassay in Rodents: a short-term screening test for oestrogenic properties" />
+    <endpoint id="endpoint326_68" group="QMRF 4.18.a. Endocrine Activity. Receptor-binding (specify receptor)" subgroup="" name="OECD 441 The Hershberger Bioassay in rats A Short-term Screening Assay for (Anti) Androgenic Properties" />
+    <endpoint id="endpoint327_73" group="QMRF 4.18.b. Receptor binding and gene expression (specify receptor)" subgroup="" name="OECD 455 Stably Transfected  Human Estrogen Receptor ?-Transcriptional Activation Assay for Detection of Estrogenic Agonist Activity of Chemicals" />
+    <endpoint id="endpoint328_121" group="QMRF 4.18.c. Endocrine Activity. Other (e.g.  inhibition of specific enzymes involved in hormone synthesis or regulation, specify enzyme(s) and hormone)" subgroup="" name="OECD 2XX The Amphibian Metamorphosis Assay" />
+    <endpoint id="endpoint357_204" group="QMRF 4.19. Neurotoxicity" subgroup="" name="EC B.37. Delayed Neurotoxicity of Organophosphorus Substances following Acute Exposure" />
+    <endpoint id="endpoint357_205" group="QMRF 4.19. Neurotoxicity" subgroup="" name="EC B.38. Delayed Neurotoxicity of Organophosphorus Substances 28 Days Repeated Dose Study" />
+    <endpoint id="endpoint357_208" group="QMRF 4.19. Neurotoxicity" subgroup="" name="EC B.43. Neurotoxicity Study in Rodents" />
+    <endpoint id="endpoint357_47" group="QMRF 4.19. Neurotoxicity" subgroup="" name="OECD 418 Acute Delayed Neurotoxicity of Organophosphorus Substances" />
+    <endpoint id="endpoint357_48" group="QMRF 4.19. Neurotoxicity" subgroup="" name="OECD 419 Subchronic Delayed Neurotoxicity of Organophosphorus Substances: 28-Day" />
+    <endpoint id="endpoint357_53" group="QMRF 4.19. Neurotoxicity" subgroup="" name="OECD 424 Neurotoxicity Study in Rodents" />
+    <endpoint id="endpoint5_203" group="QMRF 5. Toxicokinetics" subgroup="" name="EC B.36. Toxicokinetics" />
+    <endpoint id="endpoint5_46" group="QMRF 5. Toxicokinetics" subgroup="" name="OECD 417 Toxicokinetics" />
+    <endpoint id="endpoint5_329" group="QMRF 5. Toxicokinetics" subgroup="" name="QMRF 5. 1. Toxicokinetics.Skin penetration" />
+    <endpoint id="endpoint5_330" group="QMRF 5. Toxicokinetics" subgroup="" name="QMRF 5. 2. Toxicokinetics.Ocular membrane penetration" />
+    <endpoint id="endpoint5_331" group="QMRF 5. Toxicokinetics" subgroup="" name="QMRF 5. 3. Toxicokinetics.Gastrointestinal absorption" />
+    <endpoint id="endpoint5_332" group="QMRF 5. Toxicokinetics" subgroup="" name="QMRF 5. 4. Toxicokinetics.Blood-brain barrier penetration" />
+    <endpoint id="endpoint5_333" group="QMRF 5. Toxicokinetics" subgroup="" name="QMRF 5. 5. Toxicokinetics.Placental barrier penetration" />
+    <endpoint id="endpoint5_334" group="QMRF 5. Toxicokinetics" subgroup="" name="QMRF 5. 6. Toxicokinetics.Blood-testis barrier penetration" />
+    <endpoint id="endpoint5_335" group="QMRF 5. Toxicokinetics" subgroup="" name="QMRF 5. 7. Toxicokinetics.Blood-lung barrier penetration" />
+    <endpoint id="endpoint5_336" group="QMRF 5. Toxicokinetics" subgroup="" name="QMRF 5. 8. Toxicokinetics.Metabolism (including metabolic clearance)" />
+    <endpoint id="endpoint5_337" group="QMRF 5. Toxicokinetics" subgroup="" name="QMRF 5. 9. Toxicokinetics.Protein-binding" />
+    <endpoint id="endpoint5_338" group="QMRF 5. Toxicokinetics" subgroup="" name="QMRF 5.10. Toxicokinetics.DNA-binding" />
+    <endpoint id="endpoint329_209" group="QMRF 5. 1. Toxicokinetics.Skin penetration" subgroup="" name="EC B.44. Skin Absorption: In Vivo Method" />
+    <endpoint id="endpoint329_210" group="QMRF 5. 1. Toxicokinetics.Skin penetration" subgroup="" name="EC B.45. Skin Absorption: In Vitro Method" />
+    <endpoint id="endpoint329_56" group="QMRF 5. 1. Toxicokinetics.Skin penetration" subgroup="" name="OECD 427 In vivo Skin absorption" />
+    <endpoint id="endpoint329_57" group="QMRF 5. 1. Toxicokinetics.Skin penetration" subgroup="" name="OECD 428 In vitro Skin Absorption" />
+    <endpoint id="endpoint336_150" group="QMRF 5. 8. Toxicokinetics.Metabolism (including metabolic clearance)" subgroup="" name="OECD 501 Metabolism in Crops" />
+    <endpoint id="endpoint336_151" group="QMRF 5. 8. Toxicokinetics.Metabolism (including metabolic clearance)" subgroup="" name="OECD 502 Metabolism in Rotational Crops" />
+    <endpoint id="endpoint336_152" group="QMRF 5. 8. Toxicokinetics.Metabolism (including metabolic clearance)" subgroup="" name="OECD 503 Metabolism in Livestock" />
+    <endpoint id="endpoint361_339" group="QMRF 6. Other" subgroup="" name="QMRF 6. 6. Other" />
+    <endpoint id="endpoint339_153" group="QMRF 6. 6. Other" subgroup="" name="OECD 504 Residues in Rotational Crops (limited Field Studies)" />
+    <endpoint id="endpoint339_154" group="QMRF 6. 6. Other" subgroup="" name="OECD 505 Residues in Livestock" />
+    <endpoint id="endpoint339_155" group="QMRF 6. 6. Other" subgroup="" name="OECD 506 Stability of Pesticide Residues in Stored Commodities" />
+    <endpoint id="endpoint339_157" group="QMRF 6. 6. Other" subgroup="" name="OECD 508 Magnitude of Pesticide Residues in Processed Commodities" />
+    <endpoint id="endpoint339_158" group="QMRF 6. 6. Other" subgroup="" name="OECD 5XX Crop Field Trial Test Guideline" />
+	  </endpoints_catalog>
+    <publications_catalog>
+    <publication id="publications_catalog_1" title="" url="" doi=""/>
+    </publications_catalog>
+    <authors_catalog>
+    	<author id="firstauthor"
+ 	    		name=""
+			affiliation=""
+			contact=""
+			url=""
+			email=""
+			number=""
+    	/>
+    	<author id="modelauthor"
+    		name=""
+			affiliation=""
+			contact=""
+			url=""
+			email=""
+			number=""
+    	/>
+    </authors_catalog>
+  </Catalogs>
+</QMRF>

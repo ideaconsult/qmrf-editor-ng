@@ -1,0 +1,27 @@
+/* Design tokens + component styles. EVERY rule must stay scoped under `.qmrf-root`
+   so an embedding host (e.g. spectrasearch) does not inherit our resets. */
+
+.qmrf-root {
+  --qmrf-bg: #ffffff;
+  --qmrf-fg: #1c1f23;
+  --qmrf-muted: #5b6570;
+  --qmrf-border: #d7dce2;
+  --qmrf-accent: #1f6feb;
+  --qmrf-warn-bg: #fff4e0;
+  --qmrf-warn-fg: #8a5200;
+  --qmrf-error-bg: #fdeceb;
+  --qmrf-error-fg: #a12622;
+  --qmrf-radius: 6px;
+  --qmrf-gap: 12px;
+
+  background: var(--qmrf-bg);
+  color: var(--qmrf-fg);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.qmrf-empty {
+  color: var(--qmrf-muted);
+  padding: var(--qmrf-gap);
+}
