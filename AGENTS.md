@@ -22,10 +22,11 @@ five OECD principles. This repo is a React rewrite of the Java
   cardinality and enums all derive from it. **Never hand-write a field label or chapter
   number**: regenerate with `pnpm gen:spec`.
 - `src/qmrf/spec.js` — generated field metadata. Committed; CI fails if it drifts from the
-  vendored DTD (`pnpm gen:spec -- --check`).
+  vendored DTD (`pnpm gen:spec -- --check`). It is excluded from Biome in `biome.json`:
+  formatting a `JSON.stringify` payload would rewrite it and break that byte comparison.
 - The Java reference implementation, for parity questions only:
   - model + DOM handling: `qmrf-swing\src\main\java\net\idea\ambit\qmrf\QMRFObject.java`
-  - field kinds: `qmrf-swing\...\chapters\QMRFSubChapter*.java` (five kinds)
+  - field kinds: `qmrf-swing\...\chapters\QMRFSubChapter*.java`
   - catalogs: `qmrf-swing\...\catalogs\Catalog*.java`
   - new-document template: `qmrf-core\src\main\resources\ambit2\qmrfeditor\qmrf.xml`
   - endpoint vocabulary: `qmrf-core\src\main\resources\ambit2\qmrfeditor\endpoints\`
@@ -44,10 +45,24 @@ Root `QMRF` (8 `#FIXED` attributes = constants, not inputs) contains:
   `endpoints`, `authors`, `publications`), referenced from chapters through
   `<x_ref idref="…" catalog="…">`. ID/IDREF integrity is a hard invariant.
 
-Field kinds reduce to five: **text** (HTML), **date**, **question** (enum attrs),
-**reference** (catalog refs), **dataset/attachment**. Enums live in attribute value sets:
-`answer (Yes|No)`, `answer (All|Some|No|Unknown)`, and the seven-flag sets
+Field kinds reduce to **eight** — `text`, `reference`, `question`, `date`, `algorithm`, `group`,
+`attachment`, `entry`. At chapter level (61 fields) the counts are text 38, reference 9,
+question 8, date 4, algorithm 1, group 1; the other eight fields nest below those — `attachment`
+(3) only inside the 9.3 group, and `entry` (4: `algorithm_ref`, `molecules` ×2, `document`) for
+elements whose whole content model is attributes with no PCDATA at all. An earlier note here
+counted five; `src/tests/qmrf/spec.test.js` pins these numbers now. Enums live in attribute value
+sets: `answer (Yes|No)`, `answer (All|Some|No|Unknown)`, and the flag sets
 (`chemname/cas/smiles/inchi/mol/formula/nanomaterial`) in 6.2 and 7.2.
+
+Dispatch a field editor on `kind`, never on `text`: `text` in the spec means "the DTD says
+`#PCDATA`", which is true of 50 chapter fields — the 38 `text` ones plus all `question` and
+`date` fields, whose answers and flags ride on attributes.
+
+**References are not typed as IDREF.** The DTD declares `*_ref/@idref` as `CDATA` and puts
+the target catalog in a `#FIXED` `catalog` attribute, so pointer resolution is driven by the
+*element name*, not the attribute type. Only a few attributes (e.g. `publication_ref`) are
+real IDREFs. Any code that resolves or rewrites references must handle both conventions —
+`collectReferences` in `src/qmrf/model.js` is the single place that does.
 
 ### Fidelity Rules (non-negotiable)
 
@@ -61,6 +76,37 @@ Field kinds reduce to five: **text** (HTML), **date**, **question** (enum attrs)
    edit best-effort**; never refuse them.
 3. **Round-trip must be byte-identical** for untouched content. `src/tests/fixtures/
    qmrf-0.9-real.xml` is the regression fixture for exactly this.
+4. **Fidelity is a property of the writer, not of luck.** The parser records each node's exact
+   source span; `model.js` edits copy-on-write along the path from the root to the edited node
+   and drop only those spans, so untouched siblings are emitted verbatim. Never re-render a
+   whole document to make one change, and never hand out mutable nodes — edits return a new
+   model. Undo relies on this: a snapshot is another immutable model reference, so undo hands
+   back the original bytes rather than an equivalent re-serialization.
+5. **Severity follows the declared version.** A document claiming 3.0 is held to 3.0. An older
+   one gets 3.0-only expectations (a missing `nanomaterial` flag, a newer 9.3 attachment) as
+   `info`, because the author never violated them. Unresolvable references stay errors in every
+   version: those silently lose data whatever the era. Measured against the real fixture the
+   report must stay at **0 errors** — if a change adds errors there, the validator is wrong,
+   not the document.
+
+## The `src/qmrf/` Core
+
+Framework-free (no React, no `DOMParser`) so it is testable in plain Vitest and reusable from
+any UI layer. Tests live in `src/tests/qmrf/`.
+
+| Module | Responsibility |
+| --- | --- |
+| `spec.js` | generated metadata: `SPEC` (chapters, fields, catalogs) and `ELEMENTS` (per-element attributes, cardinality, `#FIXED` values). Do not hand-edit. |
+| `xml.js` | tolerant **parser** and the fidelity **writer** in one file: `parseXml`/`serializeXml`/`serializeNode`, entity helpers, and each node's exact `raw` source span. |
+| `model.js` | immutable editing: `openModel`/`saveModel`, paths as `Step[]` (`QMRF_chapters[0]/QSAR_identifier[0]/QSAR_title[0]`), `getValue`/`setValue`, `getAttr`/`setAttr`, `insertOccurrence`/`removeElement`, `collectIds`/`collectReferences`/`referencesTo`/`renameId`. |
+| `validate.js` | `validate(model) → { issues, version, counts }`; every issue carries `path`, `chapter` and DTD `label` so the UI can jump to the field. |
+| `history.js` | undo/redo over those immutable models: `mergeKey` folds a typing gesture into one step, `markSaved`/`isDirty` track the saved index rather than a boolean. |
+
+**Deliberate departures from the file list in [docs/PLAN.md](./docs/PLAN.md):** there is no
+`parse.js`/`write.js` split — reading and writing a document are two directions over one
+representation, and splitting them would put the fidelity rules on both sides of a boundary.
+There is no `src/qmrf/index.js` façade either: callers import the module they need, so no export
+list can rot. `spec.js` stays Biome-excluded (see above).
 
 ## Project Shape
 

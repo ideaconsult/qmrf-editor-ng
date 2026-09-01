@@ -1,6 +1,12 @@
 # Implementation Plan
 
-Status: **approved 2026-09-01; M0 (scaffold) complete.** M1–M6 outstanding.
+Status: **approved 2026-09-01; M0 (scaffold) and M1 (schema + model) complete.** M2–M6 outstanding.
+
+What M1 changed about this plan, in one line each: the field kinds are **eight**, not five (see
+the correction in the Domain section); parsing and writing share one `src/qmrf/xml.js` instead of
+`parse.js`/`write.js`; `*_ref/@idref` is `CDATA`, not `IDREF`, so pointer routing is by element
+name; and the real 0.9 fixture uses exactly the 3.0 element vocabulary, so best-effort editing of
+older documents is a labelling problem, not a parsing one. Details in `AGENTS.md`.
 
 Naming settled during M0 in favour of the viewer role and this repo's folder: package
 `@ideaconsult/qmrf-viewer`, library global `QMRFViewer`, bundle `dist/qmrf-viewer.js`,
@@ -30,6 +36,8 @@ The shape is small, fixed and regular, which is what makes this tractable:
 - Enums live in attribute value sets: `answer (Yes|No)`, `answer (All|Some|No|Unknown)`, and the 7-flag sets (`chemname/cas/smiles/inchi/mol/formula/nanomaterial`) in 6.2 / 7.2.
 
 Field kinds reduce to **five**, matching the Java subchapter classes in `qmrf-swing\src\main\java\net\idea\ambit\qmrf\chapters\` (`QMRFSubChapterText`, `…Date`, `…Question`, `…Reference`, `QMRFSubchapterAlgorithm`, `…Dataset`), each with a matching Swing editor → five React field components cover all ~60 fields in both view and edit mode.
+
+> **Corrected in M1: the kinds are eight.** Of the 61 chapter-level fields, `gen-spec.mjs` counts `text` 38 / `reference` 9 / `question` 8 / `date` 4 / `algorithm` 1 / `group` 1. The remaining eight fields nest below: `attachment` (3) only inside the 9.3 group, and `entry` (4 — `algorithm_ref`, `molecules` ×2, `document`) for elements whose content model is attributes with no PCDATA at all. So seven React field components plus a repeat-group container, not five. Note that the spec's `text` flag means "`#PCDATA`", which 50 chapter fields are (all `question` and `date` fields too, whose answers ride on attributes) — dispatch on `kind`. `src/tests/qmrf/spec.test.js` pins these counts, and `pnpm gen:spec -- --check` keeps the whole spec byte-tied to the DTD.
 
 Two fidelity constraints, both observed in the one real fixture `qmrf-swing\src\test\resources\net\idea\ambit\qmrf\QMRF-NEW.xml` (578 lines, a genuine fish acute-toxicity model):
 

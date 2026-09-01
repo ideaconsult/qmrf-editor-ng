@@ -1,0 +1,11 @@
+# Normalize source files to LF in the index and on checkout.
+* text=auto eol=lf
+
+# XML, DTD and fixtures must stay byte-exact as committed: the round-trip tests compare
+# serializer output against their exact bytes, so Git must never convert their endings.
+*.xml -text
+*.dtd -text
+
+*.png binary
+*.jpg binary
+*.ico binary
