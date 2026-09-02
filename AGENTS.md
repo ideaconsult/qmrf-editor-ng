@@ -88,6 +88,12 @@ real IDREFs. Any code that resolves or rewrites references must handle both conv
    version: those silently lose data whatever the era. Measured against the real fixture the
    report must stay at **0 errors** — if a change adds errors there, the validator is wrong,
    not the document.
+6. **A field's shape is the document's, not ours.** The four date fields are `#PCDATA`, and the
+   fixture writes three shapes in four of them — `29.06.2009`, `20.06.2009`, and chapter 10's
+   year-first `2009/12/03` — two of them inside the HTML envelope and two as bare text.
+   `src/qmrf/dates.js` reads the shape already in the field and writes that shape back
+   (`todayIn(day, like)`), and `hasEnvelope` in `html.js` decides whether the envelope survives.
+   "Normalising" either is a fidelity break: it rewrites a value nobody asked to touch.
 
 ## The `src/qmrf/` Core
 
@@ -101,7 +107,9 @@ any UI layer. Tests live in `src/tests/qmrf/`.
 | `model.js` | immutable editing: `openModel`/`saveModel`, paths as `Step[]` (`QMRF_chapters[0]/QSAR_identifier[0]/QSAR_title[0]`), `getValue`/`setValue`, `getAttr`/`setAttr`, `insertOccurrence`/`removeElement`, `collectIds`/`collectReferences`/`referencesTo`/`renameId`. |
 | `validate.js` | `validate(model) → { issues, version, counts }`; every issue carries `path`, `chapter` and DTD `label` so the UI can jump to the field. |
 | `history.js` | undo/redo over those immutable models: `mergeKey` folds a typing gesture into one step, `markSaved`/`isDirty` track the saved index rather than a boolean. |
-| `html.js` | the rich-text **envelope** and nothing else: `fieldHtml` (body out), `wrapHtml` (body back in the form the Java kit wrote), `plainText` (one readable line, for titles and search). DOM-free; sanitisation belongs to `Html.jsx`. |
+| `html.js` | the rich-text **envelope** and nothing else: `fieldHtml` (body out), `wrapHtml` (body back in the form the Java kit wrote), `hasEnvelope` (whether a field had one to begin with — see fidelity rule 6), `plainText` (one readable line, for titles and search). DOM-free; sanitisation belongs to `src/components/sanitize.js`. |
+| `dates.js` | the four date fields' **own shapes**: `dateFormatOf` reads which of `dd.MM.yyyy`, `yyyy-MM-dd`, `dd/MM/yyyy`, `yyyy/MM/dd` a value is written in, `formatDate`/`todayIn` write a day back in that shape. Refuses to guess at anything else (`09-12-03` is three plausible answers, not a format). |
+| `catalog.js` | what a catalog holds and how a new entry joins it: `catalogEntries`/`entryOptions` (a label per entry, read off its own heading attributes), `mintId` (next free `<catalog>_N`), `addEntry` — one write that appends the entry with the DTD's attributes in DTD order, and returns `null` when the document has no such catalog to append to. The reference editors and M5's tables both go through it. |
 | `io.js` | the only browser I/O: `readText` (`File`), `fetchText` (with bearer token, status kept in the message), `downloadText`, `suggestedFilename`. Everything above it works on text. |
 | `newDocument.js` | the skeleton a New document starts from, **generated from `spec.js`** — required children only, `#FIXED` attributes from the DTD, required answers from the DTD's own enum. It validates with zero issues; upstream's hand-written `qmrf.xml` template does not (8 missing `catalog` attributes, `version="3.0.1"`). |
 | `render.js` | the *reading* rules of the report view: which element is a field (`fieldKind`), how a heading reads (`headingOf`, from the document's own attrs), what a pointer shows (`resolveReference`), which flags and files a field lists, and what counts as a link (`linkHref` refuses a bare scheme). |
@@ -138,18 +146,47 @@ standalone app, a host embed and the editor.
 - **Jumps are by address, and `''` is one**: the document's own findings belong to its properties
   block. `src/tests/shell.test.jsx` is the harness that proves an outline row reaches a report
   element; it stubs `scrollIntoView`, which jsdom lacks.
-- **The edit toggle is M4, not here.** `readOnly={false}` currently turns on New/Save; a toggle
-  with no editors behind it is a control that lies, so it ships together with the first field
-  editor it would enable.
+- **The edit toggle lives in `Header.jsx`** as a View/Edit fieldset, and `readOnly` removes both it
+  and every editor: `EditorContext` publishes `editable` (may this host write at all) and `editing`
+  (is the report showing editors now), so `FieldView` and `FieldEditor` are chosen in one place and
+  a read-only embed never mounts a contentEditable.
 
-- `src/components/Html.jsx` is the **only** place that sanitises. A QMRF text field is HTML written
-  by whoever authored the document, so it passes DOMPurify here and nowhere else; a component that
-  needs field content calls `fieldHtml` and hands the result to `<Html>`. `<style>` and form/media
-  elements are forbidden outright, and `target` links get `rel="noopener noreferrer"` after mount
-  (not as a global DOMPurify hook, which would leak into the host's own sanitising).
+- `src/components/sanitize.js` owns **every** rule about untrusted field markup: `sanitizeFieldHtml`
+  (DOMPurify; `<style>`, head/html/body, form and media elements forbidden outright) and
+  `secureLinks` (`target` links get `rel="noopener noreferrer"`, after mount and before storage, not
+  as a global DOMPurify hook, which would leak into the host's own sanitising). `Html.jsx` is the
+  viewer's caller; `RichTextField` is the editor's, and calls both **before** reading `innerHTML`
+  back — a saved document must be one the viewer would render, not one that only gets hardened on
+  the way to the screen.
+- **Editing rules, all of them load-bearing:**
+  - One write per edit. Controls commit on blur/Enter, not per keystroke, so the undo tape holds
+    edits rather than characters; a control keeps its own draft while it has the caret, so a
+    sibling field's edit cannot yank text out from under the keyboard.
+  - `RichTextField` is **uncontrolled**. React writes its markup on mount, on undo and when the
+    document is replaced — never while the caret is inside it. A controlled contentEditable is how a
+    caret lands at position zero on every keystroke.
+  - Paste is plain text; the toolbar offers only bold/italic/underline/two lists, which is what the
+    legacy HTML in real documents uses.
+  - **An edit must not move the reader.** `src/components/scroll.js` finds the container that is
+    actually scrolling (a host panel or the page's own scrolling element) and `EditorContext`
+    restores it before paint. The position is captured *during* the render that carries the new
+    model, not in an effect cleanup — a cleanup runs after sibling subtrees may already be mutated,
+    which is how "set a date in chapter 2, land in chapter 1" got into the Java app. Only
+    `showAddress` moves the report deliberately.
+  - **An add that cannot add says why**, in a `role="status"` note beside the control (no catalog to
+    mint into, nothing matching the search). A disabled button with an empty selection is a bug
+    report the reader cannot read.
+  - A minted entry and the pointer to it are **one** `doc.edit`, so one Undo reverses both.
+- `src/tests/editors.test.jsx` drives the editors through the real shell (provider, header, sidebar,
+  host panel) because the failures worth defending are shell-shaped, and asserts what was *written*
+  against `saveModel`'s bytes rather than against component state.
 - `src/components/fields/FieldView.jsx` dispatches on `fieldKind`, never on document shape, and
   `render.js` decides *what* a field means. Keep reading rules in `render.js` (pure, unit-tested)
   and layout here.
+- `src/components/fields/FieldEditor.jsx` is its counterpart and dispatches on the **same**
+  `fieldKind`, so a field cannot have an editor nobody reads or a reading nobody can edit. Shared
+  row primitives (text, enum, flag grid) live in `Controls.jsx`; anything narrower than those three
+  has its own file. Both halves address what they render through `data-qmrf-path`.
 - Every rendered chapter, field, pointer, attachment and catalog row carries its model address in
   `data-qmrf-path`, so an issue can scroll to its field and M5's delete guard can find a row. A
   pointer additionally carries `data-qmrf-target`: the address of the entry it cites. Keep those
@@ -210,6 +247,9 @@ packaging also run `pnpm build`, `pnpm peers check` and `pnpm pack --dry-run`.
 
 ## Deliberately Not Implemented
 
+- Field-level repeats: an `algorithm_explicit` field shows and edits its first
+  `algorithm_ref`/`equation` pair only. Adding the second needs the insert machinery M5 builds for
+  catalog rows, so it moved there rather than getting a one-off button.
 - SpectraSearch registry entry (no QSAR-model result type exists there yet).
 - Report export to HTML/RTF/PDF/Excel (upstream uses freemarker `qmrf.ftl`, `qmrf_rtf.ftl`,
   `table.ftl`).

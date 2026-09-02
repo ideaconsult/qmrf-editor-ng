@@ -228,6 +228,17 @@ export function headingOf(/** @type {XmlElement} */ node) {
 }
 
 /**
+ * The attributes that name an entry of a catalog — the ones a reader recognises it by, which is
+ * what makes them the label of a picker listing that catalog's entries.
+ * @param {string} catalogName
+ * @returns {string[]}
+ */
+export function headingAttrs(/** @type {string} */ catalogName) {
+  const shape = /** @type {ReferenceShape|undefined} */ (REFERENCE_SHAPES[catalogName])
+  return shape ? [...shape.heading] : []
+}
+
+/**
  * A pointer as a reader should see it: the entry it names, not the `idref` string. An unresolvable
  * pointer is shown as such rather than dropped — silently losing a row is how a report starts
  * lying, and the validator already flagged it.

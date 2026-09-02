@@ -1,3 +1,4 @@
+import { useEditing } from '../../context/EditorContext.jsx'
 import { fieldHtml } from '../../qmrf/html.js'
 import { catalogOfRef, formatPath, textOf } from '../../qmrf/model.js'
 import {
@@ -10,14 +11,20 @@ import {
   resolveReference
 } from '../../qmrf/render.js'
 import Html from '../Html.jsx'
+import FieldEditor from './FieldEditor.jsx'
 
 /**
- * One field, read-only.
+ * One field, read — or, when the shell is in edit mode, written.
  *
  * The layout follows `qmrf2div.xsl`, the stylesheet upstream's own viewer runs: chapter number and
  * label as a subheading, then the answer, then the content, with a catalog entry shown as the entry
  * rather than as its pointer. Which columns of an entry are shown is `render.js`'s decision, so this
  * component only lays out what it is handed.
+ *
+ * Reading and writing share the heading and the address, and nothing else: the body is either the
+ * report's own rendering or the editor `FieldEditor` picks for this kind. A field that keeps showing
+ * its content while it is also being edited would double the page and give two answers to one
+ * question, so one of them is always absent.
  *
  * Shape comes from the generated `kind`, never from whether the element holds character data: 50 of
  * the 61 chapter fields are `#PCDATA`, the question fields among them, and their answers are
@@ -37,6 +44,7 @@ import Html from '../Html.jsx'
  * @param {{model: Model, node: XmlElement, path: Path}} props
  */
 export default function FieldView({ model, node, path }) {
+  const editing = useEditing()
   const kind = fieldKind(node.name) ?? 'text'
   const nodes = elements(node)
   const pointers = nodes.filter((child) => child.name.endsWith('_ref'))
@@ -45,18 +53,31 @@ export default function FieldView({ model, node, path }) {
     (child) => !child.name.endsWith('_ref') && !(kind === 'algorithm' && child.name === 'equation')
   )
   const content = nested.length === 0 ? fieldHtml(textOf(node)) : ''
+  // A group (9.3's attachment slots) has no body of its own: it is the sum of the fields under it,
+  // each of which switches to its own editor in turn.
+  const showBody = !editing || kind === 'group'
 
   return (
-    <section className={`qmrf-field qmrf-field--${kind}`} data-qmrf-path={formatPath(path)}>
+    <section
+      className={`qmrf-field qmrf-field--${kind}${editing && kind !== 'group' ? ' qmrf-field--editing' : ''}`}
+      data-qmrf-path={formatPath(path)}
+    >
       <h4 className="qmrf-field-heading">{headingOf(node)}</h4>
-      {kind === 'question' ? <Answer node={node} /> : null}
-      {pointers.length > 0 ? <ReferenceList model={model} refs={pointers} parent={path} /> : null}
-      {kind === 'algorithm' ? <Equation nodes={nodes} /> : null}
-      {kind === 'attachment' ? <Attachments group={node} path={path} /> : null}
-      {kind === 'attachment' || nested.length === 0 ? null : (
-        <ChildFields model={model} parent={node} parentPath={path} />
-      )}
-      {content ? <Html html={content} className="qmrf-field-body" /> : null}
+      {showBody ? null : <FieldEditor model={model} node={node} path={path} />}
+      {showBody ? (
+        <>
+          {kind === 'question' ? <Answer node={node} /> : null}
+          {pointers.length > 0 ? (
+            <ReferenceList model={model} refs={pointers} parent={path} />
+          ) : null}
+          {kind === 'algorithm' ? <Equation nodes={nodes} /> : null}
+          {kind === 'attachment' ? <Attachments group={node} path={path} /> : null}
+          {kind === 'attachment' || nested.length === 0 ? null : (
+            <ChildFields model={model} parent={node} parentPath={path} />
+          )}
+          {content ? <Html html={content} className="qmrf-field-body" /> : null}
+        </>
+      ) : null}
     </section>
   )
 }

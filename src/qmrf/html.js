@@ -34,6 +34,14 @@ export function fieldHtml(/** @type {string|null|undefined} */ value) {
 }
 
 /**
+ * Whether a stored value is written as the Java kit's envelope rather than as bare prose. The editor
+ * asks so that a field written bare stays bare: wrapping it would be a change to bytes nobody edits.
+ */
+export function hasEnvelope(/** @type {string|null|undefined} */ value) {
+  return ENVELOPE.test((value ?? '').trim())
+}
+
+/**
  * A readable one-line form of a field value — for `<option>` labels, `<title>` attributes and
  * search. Tags are dropped first and entities decoded second, so prose that legitimately contains
  * `&lt;` ("a.s.&lt;85% purity" in the published fixture) is read as text rather than as markup.

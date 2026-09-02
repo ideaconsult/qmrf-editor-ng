@@ -501,6 +501,261 @@
   margin-left: 8px;
 }
 
+/* ---------- editing ---------- */
+
+/* The mode switch is a group, which in HTML is a fieldset, so its form styling is reset away
+   rather than inherited into the header strip. */
+.qmrf-mode {
+  border: 0;
+  display: flex;
+  gap: 2px;
+  margin: 0;
+  min-inline-size: 0;
+  padding: 0;
+}
+
+.qmrf-button--on {
+  background: color-mix(in srgb, var(--qmrf-accent) 14%, var(--qmrf-bg));
+  border-color: var(--qmrf-accent);
+  font-weight: 600;
+}
+
+.qmrf-button--add {
+  border-color: var(--qmrf-accent);
+}
+
+.qmrf-button--remove {
+  color: var(--qmrf-error-fg);
+}
+
+/* An edited field is boxed so it is obvious where typing goes, while staying the same width as
+   every read-only field around it — the report should not reflow when the mode changes. */
+.qmrf-field--editing {
+  background: color-mix(in srgb, var(--qmrf-border) 15%, var(--qmrf-bg));
+  border: 1px solid var(--qmrf-border);
+  border-radius: var(--qmrf-radius);
+  padding: 6px 8px;
+}
+
+.qmrf-edit-row {
+  align-items: baseline;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  margin: 4px 0;
+}
+
+.qmrf-edit-label {
+  color: var(--qmrf-muted);
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 7rem;
+  text-transform: lowercase;
+}
+
+.qmrf-input {
+  background: var(--qmrf-bg);
+  border: 1px solid var(--qmrf-border);
+  border-radius: 4px;
+  color: inherit;
+  flex: 1 1 14rem;
+  font: inherit;
+  min-width: 0;
+  padding: 3px 6px;
+}
+
+.qmrf-input--short {
+  flex: 0 1 8rem;
+}
+
+.qmrf-input:focus-visible,
+.qmrf-rich-body:focus-visible {
+  border-color: var(--qmrf-accent);
+  outline: 1px solid var(--qmrf-accent);
+}
+
+.qmrf-edit-hint,
+.qmrf-edit-empty {
+  color: var(--qmrf-muted);
+  font-size: 12px;
+  margin: 0;
+}
+
+.qmrf-edit-note {
+  background: var(--qmrf-warn-bg);
+  border-radius: var(--qmrf-radius);
+  color: var(--qmrf-warn-fg);
+  font-size: 13px;
+  margin: 6px 0 0;
+  padding: 4px 8px;
+}
+
+.qmrf-edit-list {
+  list-style: none;
+  margin: 4px 0;
+  padding: 0;
+}
+
+.qmrf-edit-item {
+  align-items: baseline;
+  border-top: 1px solid var(--qmrf-border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  padding: 4px 0;
+}
+
+.qmrf-edit-item-label {
+  flex: 1 1 12rem;
+  font-weight: 600;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.qmrf-edit-add {
+  align-items: baseline;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  margin-top: 6px;
+}
+
+.qmrf-choice,
+.qmrf-flags-grid {
+  border: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 4px 0;
+  min-inline-size: 0;
+  padding: 0;
+}
+
+.qmrf-choice legend,
+.qmrf-flags-grid legend {
+  color: var(--qmrf-muted);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0;
+}
+
+.qmrf-choice-option {
+  align-items: center;
+  color: inherit;
+  display: inline-flex;
+  font-size: 13px;
+  gap: 4px;
+  text-transform: none;
+}
+
+/* The inventory flags read as a grid rather than a paragraph of checkboxes. */
+.qmrf-flags-grid {
+  display: grid;
+  gap: 2px 16px;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, max-content));
+}
+
+.qmrf-date {
+  align-items: baseline;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* ---------- the rich-text editor ---------- */
+
+.qmrf-rich {
+  border: 1px solid var(--qmrf-border);
+  border-radius: var(--qmrf-radius);
+  overflow: hidden;
+}
+
+.qmrf-rich-tools {
+  background: color-mix(in srgb, var(--qmrf-border) 30%, var(--qmrf-bg));
+  border-bottom: 1px solid var(--qmrf-border);
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+}
+
+.qmrf-tool {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: inherit;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1.2;
+  min-width: 24px;
+  padding: 1px 6px;
+}
+
+.qmrf-tool:hover {
+  border-color: var(--qmrf-border);
+}
+
+.qmrf-tool--bold {
+  font-weight: 700;
+}
+
+.qmrf-tool--italic {
+  font-style: italic;
+}
+
+.qmrf-tool--underline {
+  text-decoration: underline;
+}
+
+/* The body is a contentEditable the browser owns; it borrows the report's own typography so what
+   the user types looks like what the report will show. */
+.qmrf-rich-body {
+  background: var(--qmrf-bg);
+  min-height: 4rem;
+  overflow-wrap: anywhere;
+  padding: 6px 8px;
+}
+
+.qmrf-rich-body > :first-child {
+  margin-top: 0;
+}
+
+.qmrf-rich-body > :last-child {
+  margin-bottom: 0;
+}
+
+/* ---------- attachments, references, chapter blocks ---------- */
+
+.qmrf-attachment-edit {
+  border-left: 2px solid var(--qmrf-border);
+  margin: 6px 0;
+  padding-left: 8px;
+}
+
+.qmrf-attachments-edit,
+.qmrf-reference {
+  display: block;
+}
+
+.qmrf-picker {
+  border-top: 1px dashed var(--qmrf-border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+  padding-top: 6px;
+}
+
+.qmrf-picker-search {
+  flex: 1 1 12rem;
+}
+
+.qmrf-chapter-tools {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+  margin: 6px 0 var(--qmrf-gap);
+}
+
 @media print {
   .qmrf-header,
   .qmrf-toolbar,

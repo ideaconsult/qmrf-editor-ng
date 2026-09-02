@@ -1,6 +1,7 @@
+import { useEditing, useEditor } from '../context/EditorContext.jsx'
 import { useViewerConfig } from '../context/ViewerConfig.jsx'
 import { plainText } from '../qmrf/html.js'
-import { formatPath, textOf } from '../qmrf/model.js'
+import { formatPath, insertOccurrence, removeElement, textOf } from '../qmrf/model.js'
 import { CATALOG_NOTES, documentMeta, elements, headingOf, linkHref } from '../qmrf/render.js'
 import { ELEMENTS, SPEC } from '../qmrf/spec.js'
 import { ChildFields } from './fields/FieldView.jsx'
@@ -29,6 +30,7 @@ const CATALOGS_BLOCK = BLOCKS[1] ?? 'Catalogs'
  */
 export default function ReportView({ model }) {
   const root = model.root
+  const editing = useEditing()
   if (!root) return null
   const blocks = elements(root)
   const chapterBlock = blocks.find((block) => block.name === CHAPTERS_BLOCK)
@@ -61,7 +63,7 @@ export default function ReportView({ model }) {
           ))}
         </dl>
       </header>
-      {chapterBlock ? chapters(model, chapterBlock) : null}
+      {chapterBlock ? chapters(model, chapterBlock, editing) : null}
       {catalogBlock ? <Catalogs block={catalogBlock} /> : null}
     </article>
   )
@@ -83,7 +85,11 @@ function documentTitle(/** @type {XmlElement} */ chapterBlock) {
 }
 
 /** The chapter elements, each with the fields it holds, in document order. */
-function chapters(/** @type {Model} */ model, /** @type {XmlElement} */ block) {
+function chapters(
+  /** @type {Model} */ model,
+  /** @type {XmlElement} */ block,
+  /** @type {boolean} */ editing
+) {
   const found = elements(block)
   /** @type {Record<string, number>} */
   const totals = {}
@@ -114,10 +120,74 @@ function chapters(/** @type {Model} */ model, /** @type {XmlElement} */ block) {
               ) : null}
             </h3>
             <ChildFields model={model} parent={chapter} parentPath={path} />
+            {editing ? (
+              <ChapterTools
+                name={chapter.name}
+                path={path}
+                occurrence={index}
+                total={totals[chapter.name] ?? 1}
+              />
+            ) : null}
           </section>
         )
       })}
     </>
+  )
+}
+
+/**
+ * Add or drop a whole chapter, for the two the schema repeats.
+ *
+ * Chapters 5 (applicability domain) and 7 (external validation) are `oneOrMore`: a model with two
+ * applicability domains says so with two blocks, and one block is not half the story. A new block
+ * arrives with its `#FIXED` attributes already in place — `newElement` seeds them from the DTD — so
+ * it reads as "5. Defining the applicability domain" rather than as an empty heading, and the only
+ * block that can be removed is a second one, because a document without its chapter 5 does not
+ * validate at all.
+ *
+ * @param {{name: string, path: Path, occurrence: number, total: number}} props
+ */
+function ChapterTools({ name, path, occurrence, total }) {
+  const { doc, markAddress } = useEditor()
+  // Held in a local, not read off `doc` inside the handlers below: the guard here says nothing to a
+  // callback that runs after a sibling edit could have replaced the document.
+  const model = doc.model
+  if (!model) return null
+  if (!SPEC.chapters.some((chapter) => chapter.name === name && chapter.repeatable)) return null
+  const label = SPEC.chapters.find((chapter) => chapter.name === name)?.label ?? name
+
+  return (
+    <div className="qmrf-chapter-tools">
+      <button
+        type="button"
+        className="qmrf-button qmrf-button--add"
+        onClick={() => {
+          const inserted = insertOccurrence(model, [{ name: CHAPTERS_BLOCK, index: 0 }], name)
+          if (!inserted) return
+          doc.edit(inserted.model, { label: `add ${label}` })
+          markAddress(formatPath(inserted.path))
+        }}
+      >
+        Another {label} block
+      </button>
+      {total > 1 ? (
+        <button
+          type="button"
+          className="qmrf-button qmrf-button--remove"
+          onClick={() => {
+            doc.edit(removeElement(model, path), { label: `remove ${label}` })
+            markAddress(
+              formatPath([
+                { name: CHAPTERS_BLOCK, index: 0 },
+                { name, index: Math.max(0, occurrence - 1) }
+              ])
+            )
+          }}
+        >
+          Remove this block
+        </button>
+      ) : null}
+    </div>
   )
 }
 

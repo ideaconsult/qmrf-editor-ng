@@ -13,7 +13,7 @@ import Toolbar from './Toolbar.jsx'
  */
 
 export default function Header() {
-  const { doc } = useEditor()
+  const { doc, editable, editing, setEditing } = useEditor()
   const { readOnly, onSave } = useViewerConfig()
   const canWrite = !readOnly || Boolean(onSave)
   const label = doc.model ? suggestedFilename(doc.model) : ''
@@ -21,6 +21,29 @@ export default function Header() {
   return (
     <header className="qmrf-header">
       <span className="qmrf-title">QMRF</span>
+      {editable ? (
+        // View is the default and Edit is opt-in, twice over: the host has to allow writing at all,
+        // and the reader then has to ask for the editors. A document that starts out as a form is a
+        // document that a reader mis-clicks before they have read it.
+        <fieldset className="qmrf-mode" aria-label="Reading or editing">
+          <button
+            type="button"
+            className={`qmrf-button${editing ? '' : ' qmrf-button--on'}`}
+            aria-pressed={!editing}
+            onClick={() => setEditing(false)}
+          >
+            View
+          </button>
+          <button
+            type="button"
+            className={`qmrf-button${editing ? ' qmrf-button--on' : ''}`}
+            aria-pressed={editing}
+            onClick={() => setEditing(true)}
+          >
+            Edit
+          </button>
+        </fieldset>
+      ) : null}
       {doc.report ? <Findings /> : null}
       <fieldset className="qmrf-history" aria-label="Editing history">
         <button

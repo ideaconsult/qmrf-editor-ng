@@ -1,7 +1,7 @@
 # Implementation Plan
 
-Status: **approved 2026-09-01; M0 (scaffold), M1 (schema + model), M2 (IO + viewer) and M3 (shell)
-complete.** M4–M6 outstanding.
+Status: **approved 2026-09-01; M0 (scaffold), M1 (schema + model), M2 (IO + viewer), M3 (shell)
+and M4 (field editors) complete.** M5–M6 outstanding.
 
 What M1 changed about this plan, in one line each: the field kinds are **eight**, not five (see
 the correction in the Domain section); parsing and writing share one `src/qmrf/xml.js` instead of
@@ -26,6 +26,22 @@ come from the document and the validator rather than from components; navigation
 address** (`data-qmrf-path`, scoped to the report's own DOM node), and `''` is the document's own
 address; and a catalog is given its own `data-qmrf-path` and a uid-prefixed `id`, so an embedded
 viewer scrolls its own report and two embeds do not share anchors. Details in `AGENTS.md`.
+
+What M4 changed about this plan, in one line each: **sanitisation moved out of `Html.jsx`** into
+`src/components/sanitize.js`, because the editor now writes field content as well as the viewer
+showing it and both must apply the same rules (what is stored is what the viewer would show); an
+edit **never moves the reader** — `src/components/scroll.js` finds the container that was actually
+scrolling and the shell restores it before paint, which is the fix for upstream's "set a date in
+chapter 2, land in chapter 1" behaviour; **an add that cannot add says so** (`role="status"`, e.g. a
+document with no `endpoints_catalog` for a term to go into) rather than doing nothing; an entry the
+vocabulary mints and the pointer to it are **one write**, so one Undo takes both back; `DateField`
+is **format-preserving** — it reads the shape already in the field (`dd.MM.yyyy`, `yyyy-MM-dd`,
+`dd/MM/yyyy` and the year-first `yyyy/MM/dd` chapter 10 uses) and writes that shape, leaving a field
+that came in bare bare; the 5/7 **repeat control is `ChapterTools` in `ReportView`**, not a
+`RepeatGroup` component, because the schema repeats those chapters at chapter level only; and the
+**edit toggle shipped** with the editors that make it true. Field-level repeats inside
+`algorithm_explicit` (`algorithm_ref` + `equation`) are not editable yet — M5's catalog tables
+need the same insert machinery, so it moves there with them. Details in `AGENTS.md`.
 
 Naming settled during M0 in favour of the viewer role and this repo's folder: package
 `@ideaconsult/qmrf-viewer`, library global `QMRFViewer`, bundle `dist/qmrf-viewer.js`,
@@ -85,7 +101,7 @@ CI to satisfy: `pnpm install --frozen-lockfile` → `pnpm peers check` → `pnpm
 
 **M3 — shell + edit.** Shipped as: `src/qmrf/outline.js` (pure outline + per-part counts); `src/context/{EditorContext,ViewerConfig}.jsx`; `src/components/Sidebar.jsx` — one `nav` listing the document, its chapters and its catalogs, each row a jump and a finding count (chapter and catalog nav are one list, not two components, because both are the document's own parts addressed the same way); `src/components/Header.jsx` — validation chip (click → worst first finding), undo/redo, `Toolbar`; `QMRFViewer.jsx` as layout: drop target, error banner, `Sidebar` beside the report. `data-qmrf-path` became the navigation key, `''` included. **The edit toggle is deferred to M4**, where it has something to switch on.
 
-**M4 — field editors** (`src/components/fields/`): `RichTextField` (contentEditable, DOMPurify on paste, toolbar limited to tags legacy HTML actually uses, writes the escaped-HTML envelope), `DateField`, `QuestionField` (Yes/No + All/Some/No/Unknown radios, and the 7-flag grid), `ReferenceField` (catalog multi-select → `*_ref idref catalog`), `AttachmentField` (`molecules`/`document`: url/embedded/filetype/description), `RepeatGroup` for chapters 5 and 7. Dispatch is metadata-driven off `spec.js` `kind`; each component renders the view variant too. Plus the **edit toggle** M3 left behind: it flips the dispatch between the view and edit variants of every field at once.
+**M4 — field editors** (`src/components/fields/`). Shipped as: `FieldEditor.jsx` — the edit half of the `fieldKind` dispatch M2's `FieldView.jsx` started, so one `kind` decides both readings; `RichTextField` (contentEditable that React never writes while the caret is in it, plain-text paste, a toolbar limited to the tags legacy HTML actually uses, and `sanitize.js` applied to what it *stores*, not only to what it shows), `DateField` (+ `src/qmrf/dates.js`, format-preserving), `QuestionField` (Yes/No and All/Some/No/Unknown radios, plus the 7-flag grid, off the DTD's own enums), `ReferenceField` (+ `src/qmrf/catalog.js`: cite an existing entry, mint one, repoint, stop citing — and `EndpointPicker` for the vocabulary), `AttachmentField` (`molecules`/`document`: url/embedded/filetype/description), `Controls.jsx` for the shared row primitives — one write per commit, on blur rather than per keystroke, so one edit is one undo step. `ReportView`'s `ChapterTools` adds and removes the repeated chapters 5 and 7. `scroll.js` keeps the reader in place across all of it. The **edit toggle** M3 deferred shipped here, in `Header`, as a View/Edit fieldset that flips the dispatch for every field at once; `readOnly` removes it and the editors together.
 
 **M5 — catalogs.** Six editable tables with ID minting; delete blocked with a reference list when an entry is `idref`-ed.
 
