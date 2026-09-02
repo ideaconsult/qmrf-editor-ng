@@ -1,7 +1,8 @@
 # Implementation Plan
 
 Status: **approved 2026-09-01; M0 (scaffold), M1 (schema + model), M2 (IO + viewer), M3 (shell),
-M4 (field editors) and M5 (catalogs) complete.** M6 outstanding.
+M4 (field editors), M5 (catalogs) and M6 (finish) complete.** The plan is delivered; what remains
+is listed under `Deliberately Not Implemented` in `AGENTS.md`.
 
 What M1 changed about this plan, in one line each: the field kinds are **eight**, not five (see
 the correction in the Domain section); parsing and writing share one `src/qmrf/xml.js` instead of
@@ -60,6 +61,19 @@ here **did ship** (`insertOccurrence`, which `addEntry` uses) but the `algorithm
 control still did not, and moved to `Deliberately Not Implemented` with the reason; and `testTimeout`
 went up because the suite's seconds are **jsdom, not the app** — measured, see `AGENTS.md`. Details
 in `AGENTS.md`.
+
+What M6 changed about this plan, in one line each: the issue list is **an accordion in the sidebar
+column, not a panel of its own** — the outline already says where and the chip already says how
+much, so the list adds only the *what*, mounts only while open, and opens itself only on an error;
+the sidebar column became **one grid child** (`.qmrf-side`) holding two stacked panels, because a
+fragment there would have made the findings list the report's second column; version drift is said
+**once, at the top, in the document's own declared versions** rather than as one finding per label
+that drifted, with an explicit promise not to rewrite them (fidelity rules 2 and 5 already decided
+the behaviour — this only says it); a finding's "where" is derived from the issue's own fields, and
+for a pointer — whose issue carries no `element`, only a path — from the path's last step; and the
+endpoint vocabulary **stays eagerly imported**, measured at ~21% of the bundle's bytes, because a
+dynamic `import()` would emit a second chunk and break the two-file `dist` output the sibling
+viewers and a host's `exports` map are written against. Details in `AGENTS.md`.
 
 Naming settled during M0 in favour of the viewer role and this repo's folder: package
 `@ideaconsult/qmrf-viewer`, library global `QMRFViewer`, bundle `dist/qmrf-viewer.js`,
@@ -136,7 +150,17 @@ with no such catalog element — is a `role="status"` sentence, not silence. Who
 has to be released first. Delete of an uncited entry takes the blank line in front of it with it
 (`removeElement`), leaving the rest of the file byte-identical.
 
-**M6 — finish.** Issue list with click-to-field navigation, version-drift banner, `build:lib` verified, README documenting the props API and the future one-entry `viewers.js` registration.
+**M6 — finish.** Shipped as: `src/components/Findings.jsx` — the validator's findings as one
+accordion under the outline, sorted errors first, one row per finding with its severity, a "where"
+derived from the issue's own `label`/`chapter`/`element` (falling back to the path's last step for a
+pointer, whose issue names no element) and a `showAddress(issue.path)` jump, mounted only while open
+and open by default only when `counts.error > 0`; `Sidebar` became the whole sidebar column —
+`.qmrf-side` wrapping the `nav` and the findings section, so the column's scroll, border and sticky
+position are one element's; the **version-drift banner** in `QMRFViewer`'s shell, naming the
+versions the document declares and the ones this app follows and promising the report is the file as
+it stands; README's props table, the reader-facing behaviour, and the future one-entry `viewers.js`
+registration with its `kind: "route"` requirement. `build:lib` was verified against the two-file
+output, and the endpoint vocabulary's `import()` was measured and declined (see `AGENTS.md`).
 
 ### Deliberate deviations from the siblings
 
@@ -155,5 +179,5 @@ Also absent upstream and therefore new design (nothing to imitate): editing, dir
 
 - `pnpm test`: spec generation matches the DTD (chapter/field counts, enum sets); validator catches each injected defect; **byte-identity round-trip on the real 0.9 fixture** (parse → write ≡ input) and write-after-write idempotence; each field kind reads/writes the right shape; ID/IDREF integrity; undo/redo restores exact prior state.
 - `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm build:lib` all clean; `dist/qmrf-editor.js` + `dist/style.css` present; assert the bundle contains no React runtime and no `import.meta.env`/`VITE_` (the siblings' own grep gate).
-- `pnpm dev` manual pass: open `qmrf-0.9-real.xml` → drift banner appears → chapter HTML fields render formatted rather than as raw tags → edit text, add a descriptor, add a second applicability-domain block → undo/redo → download → reopen the download with no `parsererror` and all edits present.
-- Where available: `xmllint --noout --valid <download>` against the vendored DTD; skipped with an explicit note if xmllint is absent, since upstream itself does not validate.
+- `pnpm dev` manual pass: open `qmrf-0.9-real.xml` → drift banner appears → chapter HTML fields render formatted rather than as raw tags → edit text, add a descriptor, add a second applicability-domain block → undo/redo → download → reopen the download with no `parsererror` and all edits present. **Automated in M6 as `src/tests/roundtrip.test.jsx`** for the part that is a claim about bytes and state (open → edit a date → undo → redo → Save hands the text to the host → reopen: same findings, `saveModel` a fixed point, untouched values byte-identical). What still needs a real browser, because jsdom has no layout, no caret and no `execCommand`: rich-text caret/IME behaviour, scroll position across a long report, and print CSS.
+- Where available: `xmllint --noout --valid <download>` against the vendored DTD; skipped with an explicit note if xmllint is absent, since upstream itself does not validate. **Checked at M6: no `xmllint` on this machine**, so the DTD-validation step is not run — the byte-identity round trip and the validator's zero-errors invariant are what is actually enforced.

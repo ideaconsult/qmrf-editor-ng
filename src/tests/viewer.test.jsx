@@ -282,3 +282,26 @@ describe('QMRFViewer', () => {
     ).toContain('Nothing')
   })
 })
+
+describe('a document that declares another version', () => {
+  it('says so once, at the top, in the versions the document itself declares', () => {
+    render(<QMRFViewer xml={fixture} />)
+    const banners = document.querySelectorAll('.qmrf-banner--drift')
+    // Once, not per finding: the era a file was written in is not 24 mistakes.
+    expect(banners).toHaveLength(1)
+    const said = banners[0]?.textContent ?? ''
+    expect(said).toContain('schema_version="0.9"')
+    expect(said).toContain('1.2')
+    expect(said).toContain('1.0')
+    expect(said).toContain('3.0')
+    // The promise the reader is being given: the report below is this file, not a translation.
+    expect(said).toContain('as it stands')
+    // It is chrome, not content — the report is what gets saved, and it must not acquire this.
+    expect(document.querySelector('.qmrf-report')?.textContent).not.toContain('as it stands')
+  })
+
+  it('is quiet about a document written by this app', () => {
+    render(<QMRFViewer xml={newDocumentText()} />)
+    expect(document.querySelector('.qmrf-banner--drift')).toBeNull()
+  })
+})

@@ -162,7 +162,7 @@
     grid-template-columns: 15rem minmax(0, 1fr);
   }
 
-  .qmrf-nav {
+  .qmrf-side {
     position: sticky;
     top: 8px;
   }
@@ -172,16 +172,21 @@
   min-width: 0;
 }
 
-.qmrf-nav {
+/* The sidebar is one grid child holding two stacked panels — the outline and the findings — so the
+   column's scroll, border and sticky position belong to the wrapper, not to the `nav`. */
+.qmrf-side {
   border-right: 1px solid var(--qmrf-border);
-  font-size: 13px;
   max-height: calc(100vh - 16px);
   overflow: auto;
   padding: var(--qmrf-gap) var(--qmrf-gap) var(--qmrf-gap) 0;
 }
 
+.qmrf-nav {
+  font-size: 13px;
+}
+
 @media (max-width: 59.99rem) {
-  .qmrf-nav {
+  .qmrf-side {
     border-bottom: 1px solid var(--qmrf-border);
     border-right: 0;
     max-height: 14rem;
@@ -247,17 +252,20 @@
   padding: 0 6px;
 }
 
-.qmrf-nav-count--info {
+.qmrf-nav-count--info,
+.qmrf-findings-count--info {
   background: var(--qmrf-note-bg);
   color: var(--qmrf-note-fg);
 }
 
-.qmrf-nav-count--warning {
+.qmrf-nav-count--warning,
+.qmrf-findings-count--warning {
   background: var(--qmrf-warn-bg);
   color: var(--qmrf-warn-fg);
 }
 
-.qmrf-nav-count--error {
+.qmrf-nav-count--error,
+.qmrf-findings-count--error {
   background: var(--qmrf-error-bg);
   color: var(--qmrf-error-fg);
   font-weight: 600;
@@ -269,10 +277,135 @@
   padding: 8px var(--qmrf-gap);
 }
 
+.qmrf-banner code {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 12px;
+}
+
 .qmrf-banner--error {
   background: var(--qmrf-error-bg);
   border: 1px solid var(--qmrf-error-fg);
   color: var(--qmrf-error-fg);
+}
+
+/* Drift is not a fault in the document, so it is said in the warning palette without the weight the
+   error banner carries. */
+.qmrf-banner--drift {
+  background: var(--qmrf-warn-bg);
+  border: 1px solid var(--qmrf-warn-fg);
+  color: var(--qmrf-warn-fg);
+}
+
+/* ---------- the findings list ---------- */
+
+.qmrf-findings {
+  border-top: 1px solid var(--qmrf-border);
+  font-size: 12px;
+  margin-top: var(--qmrf-gap);
+  padding-top: 8px;
+}
+
+.qmrf-findings-toggle {
+  align-items: baseline;
+  background: none;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  flex-wrap: wrap;
+  font: inherit;
+  gap: 6px;
+  padding: 0;
+  text-align: start;
+  width: 100%;
+}
+
+.qmrf-findings-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.qmrf-findings-count {
+  border-radius: 8px;
+  font-size: 11px;
+  padding: 0 6px;
+}
+
+.qmrf-findings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+
+/* One finding: its severity and where it is on the first line, what the validator said on the
+   second. A row is a button because the whole row is the jump. */
+.qmrf-finding {
+  border: 0;
+  border-inline-start: 3px solid var(--qmrf-border);
+  color: inherit;
+  cursor: pointer;
+  display: grid;
+  font: inherit;
+  gap: 0 6px;
+  grid-template-columns: auto minmax(0, 1fr);
+  padding: 2px 4px;
+  text-align: start;
+  width: 100%;
+}
+
+.qmrf-finding:hover {
+  background: var(--qmrf-note-bg);
+}
+
+.qmrf-finding--error {
+  border-inline-start-color: var(--qmrf-error-fg);
+}
+
+.qmrf-finding--warning {
+  border-inline-start-color: var(--qmrf-warn-fg);
+}
+
+.qmrf-finding--info {
+  border-inline-start-color: var(--qmrf-note-fg);
+}
+
+.qmrf-finding-severity {
+  font-size: 10px;
+  font-weight: 600;
+  grid-column: 1;
+  grid-row: 1;
+  letter-spacing: 0.04em;
+  padding-top: 1px;
+  text-transform: uppercase;
+}
+
+.qmrf-finding--error .qmrf-finding-severity {
+  color: var(--qmrf-error-fg);
+}
+
+.qmrf-finding--warning .qmrf-finding-severity {
+  color: var(--qmrf-warn-fg);
+}
+
+.qmrf-finding--info .qmrf-finding-severity {
+  color: var(--qmrf-note-fg);
+}
+
+.qmrf-finding-where {
+  font-weight: 600;
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.qmrf-finding-text {
+  color: var(--qmrf-muted);
+  grid-column: 2;
+  grid-row: 2;
 }
 
 .qmrf-empty-start p {
@@ -822,7 +955,7 @@
 @media print {
   .qmrf-header,
   .qmrf-toolbar,
-  .qmrf-nav {
+  .qmrf-side {
     display: none;
   }
 

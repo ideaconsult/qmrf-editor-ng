@@ -53,6 +53,7 @@ function Shell() {
   const { doc, reportRef } = useEditor()
   const { showHeader, showNav } = useViewerConfig()
   const [dropping, setDropping] = useState(false)
+  const version = doc.report?.version
 
   const onDrop = useCallback(
     /** @type {(event: React.DragEvent<HTMLElement>) => void} */
@@ -86,6 +87,20 @@ function Shell() {
       {doc.error ? (
         <p className="qmrf-banner qmrf-banner--error" role="alert">
           {doc.error}
+        </p>
+      ) : null}
+      {version?.drifted ? (
+        // Said once, at the top, rather than as 24 findings: the version a document declares is not
+        // a mistake the author made, it is the era the file was written in. What the reader has to
+        // know is that the report below is that document, not a translation of it — this app never
+        // rewrites `schema_version` or the labels the file carries.
+        <p className="qmrf-banner qmrf-banner--drift">
+          This document declares QMRF{' '}
+          <code>schema_version=&quot;{version.schemaVersion}&quot;</code>, written by editor version{' '}
+          <code>{version.editorVersion}</code>; this app follows{' '}
+          <code>{version.expectedSchemaVersion}</code> /{' '}
+          <code>{version.expectedEditorVersion}</code>. It opens and edits as it stands — the
+          versions it declares, and any label that drifted with them, stay as written.
         </p>
       ) : null}
       {doc.loading ? <p className="qmrf-empty">Loading…</p> : null}

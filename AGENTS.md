@@ -122,6 +122,17 @@ representation, and splitting them would put the fidelity rules on both sides of
 There is no `src/qmrf/index.js` façade either: callers import the module they need, so no export
 list can rot. `spec.js` stays Biome-excluded (see above).
 
+**The endpoint vocabulary is eagerly imported, and that is a measured decision, not an oversight.**
+`src/qmrf/vocab/endpoints-source.xml` is 57,872 bytes raw / **8,132 gz**; the library bundle is
+283,805 bytes / 54,040 gz. So the vocabulary is ~20% of the shipped bytes and ~15% of the gzipped
+transfer, which makes it the obvious candidate for a lazy `import()`. It does not get one: Vite
+forces `inlineDynamicImports` only for `umd`/`iife` output, so a dynamic `import()` in the ES build
+would emit **a second chunk** beside `dist/qmrf-viewer.js` and break the two-file output
+(`dist/qmrf-viewer.js` + `dist/style.css`) that the siblings ship and that a host's `exports` map
+and `optimizeDeps.include` are written against. The parsed rows are already lazy — the XML is
+parsed at first use, not at import. If the vocabulary ever grows enough to hurt, the fix is a
+second entry (`@ideaconsult/qmrf-viewer/endpoints`) or a data URL, not an unannounced extra chunk.
+
 ## The View Layer
 
 `src/hooks/useDocument.js` is the only place React meets the core: it owns the history, the
@@ -138,14 +149,36 @@ standalone app, a host embed and the editor.
   (`src/qmrf/outline.js`), the last-focused address, and `showAddress(address)`, which scrolls
   **within `reportRef`** so a jump cannot escape into the host page. Addresses contain `[`/`]`,
   hence the `CSS.escape` in that selector.
-- `src/QMRFViewer.jsx` renders the layout only: `Header`, then `Sidebar` beside
-  `.qmrf-report-area`. `Header` holds the validation chip (click: go to the worst first finding),
-  undo/redo and the `Toolbar`; `Sidebar` lists the document, its chapters and its catalogs with
-  per-part finding counts. Both read the contexts, so a field editor added later reaches the
+- `src/QMRFViewer.jsx` renders the layout only: `Header`, the error banner, the version-drift
+  banner, then `Sidebar` beside `.qmrf-report-area`. `Header` holds the validation chip (click: go
+  to the worst first finding), undo/redo and the `Toolbar`; `Sidebar` is the whole sidebar column —
+  a `nav` listing the document, its chapters and its catalogs with per-part finding counts, and the
+  `Findings` list under it. Both read the contexts, so a field editor added later reaches the
   document without four components agreeing to forward it.
+- **The sidebar column is one grid child.** `.qmrf-layout` is a `15rem minmax(0,1fr)` grid, so
+  returning a fragment from `Sidebar` would make the findings list the report's neighbour instead
+  of the outline's subordinate. `.qmrf-side` owns the column's border, sticky position, scroll and
+  padding (and the print/`showNav={false}` rules hide it as one thing); `nav` and the findings
+  section are its two stacked panels.
+- **The drift banner is said once, at the top, in the document's own numbers** (`version.drifted`
+  from the validator), and promises the report is the file as it stands. Fidelity rule 2 says open
+  drifted documents; this is where the reader is told, rather than in 24 findings — the era a file
+  was written in is not a mistake its author made. It is chrome: nothing of it may reach
+  `.qmrf-report`, which is what gets saved.
 - **Jumps are by address, and `''` is one**: the document's own findings belong to its properties
   block. `src/tests/shell.test.jsx` is the harness that proves an outline row reaches a report
   element; it stubs `scrollIntoView`, which jsdom lacks.
+- **`src/components/Findings.jsx` is the issue list, and it is an accordion.** The outline says
+  *where* the document is weak, the header chip says *how much*; only this says *what*. Each row is
+  one finding — its severity, where it is, and the jump — where "where" reads from the issue itself:
+  the field's DTD `label` with its chapter number, `<element>` for anything the chapters do not
+  name, `This document` for the empty address, and the **path's last step** for a pointer, whose
+  issue carries no `element` at all. The row is the button, so the jump is `showAddress(issue.path)`
+  — the same contract the outline jumps by, and it lands on the field whether or not it is edited.
+  Errors sort first. The list is mounted only while open, and opens itself only on
+  `counts.error > 0`: a real document can carry hundreds of notes, and 21 of them do not belong
+  above the fold before chapter 1 has been read — the outline counts and the chip announce the
+  totals either way, so a closed list is not a hidden problem.
 - **The edit toggle lives in `Header.jsx`** as a View/Edit fieldset, and `readOnly` removes both it
   and every editor: `EditorContext` publishes `editable` (may this host write at all) and `editing`
   (is the report showing editors now), so `FieldView` and `FieldEditor` are chosen in one place and
@@ -217,6 +250,15 @@ standalone app, a host embed and the editor.
   control **inside its own catalog's block**: chapter 3.2 legitimately has an "Add endpoint" of its
   own — a vocabulary picker that cites this catalog — so a whole-report query for that name finds two
   right answers.
+- **`src/tests/roundtrip.test.jsx` runs the whole loop** — open the published fixture, change a
+  date, undo, redo, press Save, then hand the saved text back to `openModel` *and* to a second
+  `QMRFViewer`: the same findings and no new ones, `saveModel` a fixed point, and 2.6's date,
+  chapter 10.2's and the declared `schema_version` still byte-identical while the edited field's old
+  value is gone from the bytes. Every link is unit-tested where it lives; this is the only test of
+  the join, and the join is what the user keeps (a file). It is also the only test of the Save
+  button's *output*: `onSave` receives the text synchronously and the dirty dot clears a microtask
+  later (`useDocument.save` resolves the host's promise first), so the test awaits that and the
+  async-act warning is the thing that told us the semantics.
 
 ## Project Shape
 

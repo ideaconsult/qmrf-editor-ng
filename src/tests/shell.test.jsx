@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import Header from '../components/Header.jsx'
 import ReportView from '../components/ReportView.jsx'
@@ -106,6 +106,26 @@ function documentTitle() {
   return document.querySelector('.qmrf-document-title')?.textContent ?? ''
 }
 
+/** @returns {HTMLElement} the viewer's own chrome — chip, tape, toolbar */
+function header() {
+  const node = /** @type {HTMLElement|null} */ (document.querySelector('.qmrf-header'))
+  if (!node) throw new Error('the shell has no header')
+  return node
+}
+
+/** @returns {HTMLElement[]} the findings currently on screen */
+function findingRows() {
+  return Array.from(
+    /** @type {NodeListOf<HTMLElement>} */ (document.querySelectorAll('.qmrf-finding'))
+  )
+}
+
+/** Opens the findings list the way a reader does. @returns {HTMLElement[]} its rows */
+function openFindings() {
+  fireEvent.click(screen.getByRole('button', { name: /^Findings/ }))
+  return findingRows()
+}
+
 describe('the outline', () => {
   it('lists the document, its chapters and its catalogs', () => {
     render(<Harness />)
@@ -157,7 +177,9 @@ describe('the outline', () => {
 describe('the header', () => {
   it('summarises the report and takes the reader to the first finding', () => {
     render(<Harness />)
-    const chip = screen.getByRole('button', { name: /warning/ })
+    // The findings list carries the same counts in its own toggle, so the chip is asked for where it
+    // lives rather than by what it says.
+    const chip = within(header()).getByRole('button', { name: /warning/ })
     expect(chip.textContent).toContain('warning')
     fireEvent.click(chip)
     // The published document's first warning is about its own declared version, so the jump lands on
@@ -198,5 +220,63 @@ describe('the header', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Redo' }))
     expect(documentTitle()).toBe('Renamed model')
     expect(document.querySelector('.qmrf-dirty')).not.toBeNull()
+  })
+})
+
+describe('the findings list', () => {
+  it('stays shut until the reader asks, then says everything', () => {
+    render(<Harness />)
+    const toggle = screen.getByRole('button', { name: /^Findings/ })
+    const report = validate(openModel(fixture))
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    expect(findingRows()).toHaveLength(0)
+
+    fireEvent.click(toggle)
+    expect(toggle).toHaveAttribute('aria-expanded', 'true')
+    // Every finding, and nothing but: the outline counts them too, so the two have to agree.
+    expect(findingRows()).toHaveLength(report.issues.length)
+    const said = findingRows()
+      .map((row) => row.textContent ?? '')
+      .join('\n')
+    // Three different shapes of row, all worded by the validator: the one about the file as a whole
+    // (whose address is the empty one), one named by its field's DTD label, and one only the DTD's
+    // required-attribute list could have produced.
+    expect(said).toContain('This document')
+    expect(said).toContain('4.7 Chemicals/Descriptors ratio')
+    expect(said).toContain('nanomaterial is required on <training_set_data>')
+  })
+
+  it('moves the reader to the field a note was found in', () => {
+    render(<Harness />)
+    openFindings()
+    const row = findingRows().find((r) => r.textContent?.includes('nanomaterial is required'))
+    if (!row) throw new Error('no row about the Yes/No inventory')
+    fireEvent.click(row)
+    expect(scrollIntoView).toHaveBeenCalledTimes(1)
+    expect(
+      document.querySelector(
+        '[data-qmrf-path="QMRF_chapters[0]/QSAR_Robustness[0]/training_set_data[0]"]'
+      )
+    ).not.toBeNull()
+  })
+
+  it('opens itself when something is actually broken, and puts that first', () => {
+    // A software entry loses its id, so the pointer in chapter 1.2 is left pointing at nothing.
+    render(<Harness xml={fixture.replace('id="firstsoftware"', 'id="renamed"')} />)
+    expect(screen.getByRole('button', { name: /^Findings/ })).toHaveAttribute(
+      'aria-expanded',
+      'true'
+    )
+    const rows = findingRows()
+    const first = rows[0]
+    if (!first) throw new Error('the findings list opened but rendered no rows')
+    expect(first).toHaveClass('qmrf-finding--error')
+    expect(first.textContent).toContain('firstsoftware')
+    expect(first.textContent).toContain('<software_ref>')
+  })
+
+  it('is not there at all when there is nothing to say', () => {
+    render(<Harness xml={newDocumentText()} />)
+    expect(document.querySelector('.qmrf-findings')).toBeNull()
   })
 })

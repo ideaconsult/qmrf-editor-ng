@@ -1,4 +1,5 @@
 import { useEditor } from '../context/EditorContext.jsx'
+import Findings from './Findings.jsx'
 
 /**
  * Where the document is and where it needs work, in one column.
@@ -9,6 +10,10 @@ import { useEditor } from '../context/EditorContext.jsx'
  * they were found in, which is what makes the list useful before the reader has scrolled anywhere:
  * chapter 6 with a warning on it is where to look first.
  *
+ * Below it, the findings themselves (`Findings.jsx`): the outline counts say how much, this says
+ * what, and every row is the same kind of jump. Both ride in this column, which is what
+ * `showNav={false}` switches off.
+ *
  * @typedef {import('../qmrf/outline.js').Counts} Counts
  */
 
@@ -16,40 +21,43 @@ export default function Sidebar() {
   const { doc, outline } = useEditor()
   if (!doc.model) return null
   return (
-    <nav className="qmrf-nav" aria-label="Document contents">
-      <CountsLink
-        address=""
-        label="Document"
-        detail={doc.report?.version.drifted ? 'other version' : 'properties'}
-        counts={outline.document}
-      />
-      <p className="qmrf-nav-title">Chapters</p>
-      <ul className="qmrf-nav-list">
-        {outline.chapters.map((chapter) => (
-          <li key={chapter.address}>
-            <CountsLink
-              address={chapter.address}
-              label={chapter.heading}
-              detail={chapter.occurrences > 1 ? `${chapter.occurrences} in this document` : ''}
-              counts={chapter.counts}
-            />
-          </li>
-        ))}
-      </ul>
-      <p className="qmrf-nav-title">Catalogs</p>
-      <ul className="qmrf-nav-list">
-        {outline.catalogs.map((catalog) => (
-          <li key={catalog.address}>
-            <CountsLink
-              address={catalog.address}
-              label={catalog.label}
-              detail={catalog.entries === 1 ? '1 entry' : `${catalog.entries} entries`}
-              counts={catalog.counts}
-            />
-          </li>
-        ))}
-      </ul>
-    </nav>
+    <div className="qmrf-side">
+      <nav className="qmrf-nav" aria-label="Document contents">
+        <CountsLink
+          address=""
+          label="Document"
+          detail={doc.report?.version.drifted ? 'other version' : 'properties'}
+          counts={outline.document}
+        />
+        <p className="qmrf-nav-title">Chapters</p>
+        <ul className="qmrf-nav-list">
+          {outline.chapters.map((chapter) => (
+            <li key={chapter.address}>
+              <CountsLink
+                address={chapter.address}
+                label={chapter.heading}
+                detail={chapter.occurrences > 1 ? `${chapter.occurrences} in this document` : ''}
+                counts={chapter.counts}
+              />
+            </li>
+          ))}
+        </ul>
+        <p className="qmrf-nav-title">Catalogs</p>
+        <ul className="qmrf-nav-list">
+          {outline.catalogs.map((catalog) => (
+            <li key={catalog.address}>
+              <CountsLink
+                address={catalog.address}
+                label={catalog.label}
+                detail={catalog.entries === 1 ? '1 entry' : `${catalog.entries} entries`}
+                counts={catalog.counts}
+              />
+            </li>
+          ))}
+        </ul>
+      </nav>
+      <Findings />
+    </div>
   )
 }
 
