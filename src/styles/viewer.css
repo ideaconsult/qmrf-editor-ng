@@ -756,6 +756,69 @@
   margin: 6px 0 var(--qmrf-gap);
 }
 
+/* ---------- catalog entries, edited ---------- */
+
+/* One form per entry rather than the read table with inputs in its cells: an entry is six to eight
+   attributes, several of them a paragraph, and a cell-sized box cannot show what it holds. The
+   entry's own address is on this box, so a jump lands here as readily as on a table row. */
+.qmrf-catalog-entry {
+  border-top: 1px solid var(--qmrf-border);
+  padding: 6px 0;
+}
+
+.qmrf-catalog-entry-head {
+  align-items: baseline;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+}
+
+/* The closed row is the summary: what the entry is, and its handle. It is a button, so it is
+   styled as a line of the list rather than as chrome. */
+.qmrf-catalog-entry-toggle {
+  background: none;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  flex: 1 1 12rem;
+  font: inherit;
+  font-weight: 600;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  padding: 0;
+  text-align: start;
+}
+
+.qmrf-catalog-entry-id {
+  color: var(--qmrf-muted);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.qmrf-catalog-entry-attrs {
+  display: grid;
+  gap: 0 16px;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, max-content));
+}
+
+/* Why a Remove button is dead, said in the reader's terms: the field that has to let go first, as
+   the jump to it. */
+.qmrf-catalog-used {
+  color: var(--qmrf-muted);
+  font-size: 12px;
+  margin: 2px 0 0;
+}
+
+.qmrf-catalog-cite button {
+  background: none;
+  border: 0;
+  color: var(--qmrf-accent);
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+  text-decoration: underline;
+}
+
 @media print {
   .qmrf-header,
   .qmrf-toolbar,

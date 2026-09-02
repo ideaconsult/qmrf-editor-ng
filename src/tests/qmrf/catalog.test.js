@@ -1,9 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import {
   addEntry,
+  catalogAddress,
   catalogEntries,
   catalogPath,
   catalogShape,
+  citationIndex,
+  entryCitations,
+  entryFields,
   entryOptions,
   mintId
 } from '../../qmrf/catalog.js'
@@ -140,5 +144,79 @@ describe('adding an entry', () => {
       expect(formatPath(added.path)).toMatch(new RegExp(`^Catalogs\\[0\\]/${shape.name}\\[0\\]/`))
       expect(validate(added.model).counts.error).toBe(validate(model).counts.error)
     }
+  })
+})
+
+describe('what an entry may be edited as', () => {
+  it('is the attribute list the DTD declares, minus the handles', () => {
+    expect(entryFields('descriptors_catalog').map((field) => field.name)).toEqual([
+      'name',
+      'units',
+      'description',
+      'publication_ref'
+    ])
+    // `id` is the handle the chapters point at, `ontology_term` a mapping this app does not read —
+    // the same two the read view leaves out of its columns.
+    expect(entryFields('software_catalog').map((field) => field.name)).toEqual([
+      'name',
+      'url',
+      'number',
+      'description',
+      'version',
+      'contact'
+    ])
+    expect(catalogAddress('descriptors_catalog')).toBe('Catalogs[0]/descriptors_catalog[0]')
+    expect(entryFields('made_up_catalog')).toEqual([])
+  })
+
+  it('says which attributes are required and which point elsewhere', () => {
+    const fields = entryFields('descriptors_catalog')
+    // The DTD writes a descriptor as `name! units! description!`, so only the citation may stay
+    // unwritten — which is the difference between a field the form has to nag about and one it
+    // must not.
+    expect(fields.filter((field) => field.required).map((field) => field.name)).toEqual([
+      'name',
+      'units',
+      'description'
+    ])
+    // A descriptor may cite the paper it comes from — an IDREF attribute rather than a `*_ref`
+    // child, and the editor needs to know which catalog to offer.
+    const ref = fields.find((field) => field.name === 'publication_ref')
+    expect(ref?.required).toBe(false)
+    expect(ref?.refCatalog).toBe('publications_catalog')
+  })
+})
+
+describe('who cites an entry', () => {
+  it('names the citing field, the way the report names it', () => {
+    expect(entryCitations(model, 'firstsoftware')).toEqual([
+      {
+        address: 'QMRF_chapters[0]/QSAR_identifier[0]/QSAR_software[0]',
+        label: '1.3. Software coding the model'
+      }
+    ])
+    expect(entryCitations(model, 'publications_catalog_5').map((c) => c.label)).toEqual([
+      '9.2. Bibliography'
+    ])
+    expect(entryCitations(model, 'nothing_here')).toEqual([])
+    expect(entryCitations(model, '')).toEqual([])
+  })
+
+  it('leaves an entry it added free to remove', () => {
+    const added = addEntry(model, 'descriptors_catalog', { name: 'Solvation energy' })
+    if (!added) throw new Error('the descriptor was not added')
+    expect(entryCitations(added.model, added.id)).toEqual([])
+  })
+
+  it('holds the whole document in one pass, which is why the tables ask once', () => {
+    const index = citationIndex(model)
+    // Every entry in the published document is cited by something — which is exactly why the delete
+    // guard has to explain itself rather than offer a button and do nothing.
+    const entries = SPEC.catalogs.flatMap((shape) => catalogEntries(model, shape.name))
+    expect(entries).toHaveLength(22)
+    expect(index.size).toBe(entries.length)
+    for (const entry of entries) expect(index.has(entry.id)).toBe(true)
+    // The blank pointers the fixture is full of (`publication_ref=""`) cite nothing.
+    expect(index.has('')).toBe(false)
   })
 })

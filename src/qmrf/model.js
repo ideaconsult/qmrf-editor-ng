@@ -202,6 +202,26 @@ export function setAttr(
   return withRoot(model, root)
 }
 
+/**
+ * Drops an attribute outright.
+ *
+ * `setAttr` with an empty value writes `name=""`, which is how the Java editors spell an unfilled
+ * text field and what the published fixture is full of. A *reference* is different: `publication_ref=""`
+ * is a pointer that names nothing, and an entry that never cited anything simply has no such
+ * attribute. Where a control offers "nothing", this is how it says so.
+ */
+export function removeAttr(
+  /** @type {Model} */ model,
+  /** @type {Path} */ path,
+  /** @type {string} */ name
+) {
+  if (!model.root) return model
+  const root = mapNode(model.root, path, (node) =>
+    opened({ ...node, attrs: node.attrs.filter((attr) => attr.name !== name) })
+  )
+  return withRoot(model, root)
+}
+
 /** Element children with their addressing steps, in document order. */
 export function childSteps(/** @type {Model} */ model, /** @type {Path} */ path) {
   const node = elementAt(model, path)

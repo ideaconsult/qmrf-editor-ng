@@ -104,12 +104,12 @@ any UI layer. Tests live in `src/tests/qmrf/`.
 | --- | --- |
 | `spec.js` | generated metadata: `SPEC` (chapters, fields, catalogs) and `ELEMENTS` (per-element attributes, cardinality, `#FIXED` values). Do not hand-edit. |
 | `xml.js` | tolerant **parser** and the fidelity **writer** in one file: `parseXml`/`serializeXml`/`serializeNode`, entity helpers, and each node's exact `raw` source span. |
-| `model.js` | immutable editing: `openModel`/`saveModel`, paths as `Step[]` (`QMRF_chapters[0]/QSAR_identifier[0]/QSAR_title[0]`), `getValue`/`setValue`, `getAttr`/`setAttr`, `insertOccurrence`/`removeElement`, `collectIds`/`collectReferences`/`referencesTo`/`renameId`. |
+| `model.js` | immutable editing: `openModel`/`saveModel`, paths as `Step[]` (`QMRF_chapters[0]/QSAR_identifier[0]/QSAR_title[0]`), `getValue`/`setValue`, `getAttr`/`setAttr`/`removeAttr`, `insertOccurrence`/`removeElement`, `collectIds`/`collectReferences`/`referencesTo`/`renameId`. |
 | `validate.js` | `validate(model) → { issues, version, counts }`; every issue carries `path`, `chapter` and DTD `label` so the UI can jump to the field. |
 | `history.js` | undo/redo over those immutable models: `mergeKey` folds a typing gesture into one step, `markSaved`/`isDirty` track the saved index rather than a boolean. |
 | `html.js` | the rich-text **envelope** and nothing else: `fieldHtml` (body out), `wrapHtml` (body back in the form the Java kit wrote), `hasEnvelope` (whether a field had one to begin with — see fidelity rule 6), `plainText` (one readable line, for titles and search). DOM-free; sanitisation belongs to `src/components/sanitize.js`. |
 | `dates.js` | the four date fields' **own shapes**: `dateFormatOf` reads which of `dd.MM.yyyy`, `yyyy-MM-dd`, `dd/MM/yyyy`, `yyyy/MM/dd` a value is written in, `formatDate`/`todayIn` write a day back in that shape. Refuses to guess at anything else (`09-12-03` is three plausible answers, not a format). |
-| `catalog.js` | what a catalog holds and how a new entry joins it: `catalogEntries`/`entryOptions` (a label per entry, read off its own heading attributes), `mintId` (next free `<catalog>_N`), `addEntry` — one write that appends the entry with the DTD's attributes in DTD order, and returns `null` when the document has no such catalog to append to. The reference editors and M5's tables both go through it. |
+| `catalog.js` | what a catalog holds and how a new entry joins it: `catalogShape`/`catalogPath`/`catalogAddress` (the six shapes, and the address a catalog renders at), `catalogEntries`/`entryOptions` (a label per entry, read off its own heading attributes), `entryFields` (the attributes an entry may be *edited as* — `id` and `ontology_term` excluded, each with `required`/`refCatalog`), `mintId` (next free `<catalog>_N`), `addEntry` — one write that appends the entry with the DTD's attributes in DTD order, and returns `null` when the document has no such catalog to append to, `citationIndex`/`entryCitations` (which field cites which entry, **one pass over the document** for the whole question, blank pointers excluded). The reference editors and the catalog tables both go through these. |
 | `io.js` | the only browser I/O: `readText` (`File`), `fetchText` (with bearer token, status kept in the message), `downloadText`, `suggestedFilename`. Everything above it works on text. |
 | `newDocument.js` | the skeleton a New document starts from, **generated from `spec.js`** — required children only, `#FIXED` attributes from the DTD, required answers from the DTD's own enum. It validates with zero issues; upstream's hand-written `qmrf.xml` template does not (8 missing `catalog` attributes, `version="3.0.1"`). |
 | `render.js` | the *reading* rules of the report view: which element is a field (`fieldKind`), how a heading reads (`headingOf`, from the document's own attrs), what a pointer shows (`resolveReference`), which flags and files a field lists, and what counts as a link (`linkHref` refuses a bare scheme). |
@@ -188,12 +188,35 @@ standalone app, a host embed and the editor.
   row primitives (text, enum, flag grid) live in `Controls.jsx`; anything narrower than those three
   has its own file. Both halves address what they render through `data-qmrf-path`.
 - Every rendered chapter, field, pointer, attachment and catalog row carries its model address in
-  `data-qmrf-path`, so an issue can scroll to its field and M5's delete guard can find a row. A
-  pointer additionally carries `data-qmrf-target`: the address of the entry it cites. Keep those
+  `data-qmrf-path`, so an issue can scroll to its field and the catalog delete guard can find a row.
+  A pointer additionally carries `data-qmrf-target`: the address of the entry it cites. Keep those
   addresses unique — the report's own tests assert it.
-- The report keeps the six catalogs as an appendix. Upstream's `qmrf2div.xsl` hides them, and that
-  is right for a printed report; an editor and a reader who wants to know what a model drew on both
-  need to reach them. That is a documented departure, not an oversight.
+- **The report keeps the six catalogs as an appendix, in `src/components/Catalogs.jsx`.** Upstream's
+  `qmrf2div.xsl` hides them, and that is right for a printed report; an editor and a reader who wants
+  to know what a model drew on both need to reach them. That is a documented departure, not an
+  oversight.
+  - **Reading is a table, editing is one form per entry** — an accordion, with one entry open per
+    catalog. A grid of text boxes would mount six to eight controls per row for a hundred-row
+    descriptor catalog to hide behind the fold, and reads worse than one form at a time. The closed
+    row still says what the entry *is* and who cites it, which is everything needed to choose which
+    one to open; the address is the same either way, so a jump lands on an entry open or closed.
+  - **`id` is a read-only handle, never a field.** It is what every pointer in the chapters names:
+    changing it rewrites the document rather than spelling a word differently. `renameId` does that
+    rewrite when a document really needs it; a wrong id nobody has cited is removed and added again,
+    which mints a free one and cannot strand a pointer.
+  - **Whether an entry may go is the pointers' answer, not the editor's guess.** `citationIndex` is
+    asked once where the six tables are rendered and handed down (asked per entry it walks the whole
+    document once per row, the slowest thing in the report). A cited entry gets a dead Remove named
+    by its entry, a line naming the fields that hold it, and each name a `showAddress` jump to the
+    citation that has to be released first — never a button that silently does nothing.
+  - An entry's *reference* attributes (`publication_ref` on a descriptor or an algorithm) are a
+    picker into the other catalog whose "not cited" **removes** the attribute (`removeAttr`). A text
+    attribute's blank still writes `name=""`: that is how the Java editors spell an unfilled field,
+    and the fixture is full of it.
+- `src/tests/catalogs.test.jsx` asserts the guards against `saveModel`'s bytes, and queries each
+  control **inside its own catalog's block**: chapter 3.2 legitimately has an "Add endpoint" of its
+  own — a vocabulary picker that cites this catalog — so a whole-report query for that name finds two
+  right answers.
 
 ## Project Shape
 
@@ -235,6 +258,15 @@ schema spec, ID/IDREF integrity and an XML serializer, we keep **Biome + `checkJ
 Verify changes with `pnpm lint && pnpm typecheck && pnpm test && pnpm build:lib`. For
 packaging also run `pnpm build`, `pnpm peers check` and `pnpm pack --dry-run`.
 
+**`vitest.config.js` raises `testTimeout` to 20s, and the reason is measured, not assumed.** The
+seconds belong to jsdom, not to this app: a named `getByRole` query asks testing-library to compute
+the accessible name of every candidate, which calls `getComputedStyle` once per candidate at ~4ms in
+jsdom (no stylesheet in the test document, so that is its own per-element cost), and an editing
+session puts ~330 buttons on the screen. Measured on the real fixture: one such named query 1.2–2.2s,
+one React commit that rebuilds the whole editable report 0.2–0.35s. So do not "fix" a slow test by
+assuming the component is slow — and do not lower the timeout back. `pnpm exec vitest run <name>`
+filters a run (`pnpm test -- <name>` passes the `--` through as a filter, which matches everything).
+
 ## CI And Release
 
 - `.github/workflows/ci.yml` mirrors the siblings and adds lint/typecheck/spec-freshness
@@ -248,8 +280,16 @@ packaging also run `pnpm build`, `pnpm peers check` and `pnpm pack --dry-run`.
 ## Deliberately Not Implemented
 
 - Field-level repeats: an `algorithm_explicit` field shows and edits its first
-  `algorithm_ref`/`equation` pair only. Adding the second needs the insert machinery M5 builds for
-  catalog rows, so it moved there rather than getting a one-off button.
+  `algorithm_ref`/`equation` pair only. The insert machinery it needs **did** ship in M5
+  (`insertOccurrence`, which `addEntry` uses for catalog rows), but the control on that field did
+  not: it is one more `ChapterTools`-shaped add/remove above a pair of rows, and it is the only
+  field-shaped gap left in the editor.
+- **One rich-text toolbar per field.** `RichTextField` renders its five formatting buttons inside
+  every text field, so an editing session puts ~195 of the report's ~330 buttons on screen — the
+  bulk of the tab sequence, and 39 toolbars in the accessibility tree. The fix is one toolbar for
+  the report (or one shown while its field has focus) acting on the focused field; it is a layout
+  decision, so it is not being made as a side effect of a milestone. It is also the reason the test
+  suite is slow — see the note under Commands.
 - SpectraSearch registry entry (no QSAR-model result type exists there yet).
 - Report export to HTML/RTF/PDF/Excel (upstream uses freemarker `qmrf.ftl`, `qmrf_rtf.ftl`,
   `table.ftl`).

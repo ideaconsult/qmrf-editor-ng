@@ -1,9 +1,9 @@
 import { useEditing, useEditor } from '../context/EditorContext.jsx'
-import { useViewerConfig } from '../context/ViewerConfig.jsx'
 import { plainText } from '../qmrf/html.js'
 import { formatPath, insertOccurrence, removeElement, textOf } from '../qmrf/model.js'
-import { CATALOG_NOTES, documentMeta, elements, headingOf, linkHref } from '../qmrf/render.js'
+import { documentMeta, elements, headingOf } from '../qmrf/render.js'
 import { ELEMENTS, SPEC } from '../qmrf/spec.js'
+import Catalogs from './Catalogs.jsx'
 import { ChildFields } from './fields/FieldView.jsx'
 
 /**
@@ -64,7 +64,7 @@ export default function ReportView({ model }) {
         </dl>
       </header>
       {chapterBlock ? chapters(model, chapterBlock, editing) : null}
-      {catalogBlock ? <Catalogs block={catalogBlock} /> : null}
+      {catalogBlock ? <Catalogs model={model} block={catalogBlock} /> : null}
     </article>
   )
 }
@@ -188,113 +188,5 @@ function ChapterTools({ name, path, occurrence, total }) {
         </button>
       ) : null}
     </div>
-  )
-}
-
-/** The six catalogs as tables, columns in the order the DTD declares them. */
-function Catalogs(/** @type {{block: XmlElement}} */ { block }) {
-  const catalogs = elements(block).filter((catalog) =>
-    SPEC.catalogs.some((entry) => entry.name === catalog.name)
-  )
-  if (catalogs.length === 0) return null
-  return (
-    <section className="qmrf-catalogs">
-      <h3 className="qmrf-catalogs-heading">Catalogs</h3>
-      {catalogs.map((catalog) => (
-        <Catalog key={catalog.name} catalog={catalog} />
-      ))}
-    </section>
-  )
-}
-
-/**
- * `id` is dropped from the columns: it is the handle the pointers in the chapters use, and this
- * view already shows a pointer as the entry it names, so the table would only be repeating itself.
- */
-const HIDDEN_COLUMNS = ['id', 'ontology_term']
-
-function Catalog(/** @type {{catalog: XmlElement}} */ { catalog }) {
-  const { uid } = useViewerConfig()
-  const shape = SPEC.catalogs.find((entry) => entry.name === catalog.name)
-  const entries = elements(catalog)
-  const label = shape?.label ?? catalog.name.replace(/_catalog$/, '')
-  const note = CATALOG_NOTES[catalog.name] ?? ''
-  // The catalog's own address, so the outline can jump here, and an id prefixed with this viewer's
-  // uid, so two viewers in one host page do not share anchors.
-  const address = formatPath([
-    { name: CATALOGS_BLOCK, index: 0 },
-    { name: catalog.name, index: 0 }
-  ])
-  const id = `${uid}-catalog-${catalog.name}`
-  if (entries.length === 0)
-    return (
-      <section className="qmrf-catalog" id={id} data-qmrf-path={address}>
-        <h4 className="qmrf-catalog-heading">{label}</h4>
-        <p className="qmrf-catalog-empty">
-          {note ? `${note} ` : ''}
-          <span>Nothing listed.</span>
-        </p>
-      </section>
-    )
-
-  const columns = (shape?.attrs ?? [])
-    .map((attr) => attr.name)
-    .filter((column) => !HIDDEN_COLUMNS.includes(column))
-  const value = (/** @type {XmlElement} */ node, /** @type {string} */ name) =>
-    node.attrs.find((attr) => attr.name === name)?.value ?? ''
-
-  return (
-    <section className="qmrf-catalog" id={id} data-qmrf-path={address}>
-      <h4 className="qmrf-catalog-heading">
-        {label} <span className="qmrf-catalog-count">{entries.length}</span>
-      </h4>
-      <table className="qmrf-catalog-table">
-        <caption className="qmrf-catalog-note">{note}</caption>
-        <thead>
-          <tr>
-            {columns.map((column) => (
-              <th key={column} scope="col">
-                {column}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {entries.map((entry, row) => {
-            // The row's own address doubles as its key: it is unique, stable, and the same string
-            // M6 will scroll to.
-            const rowPath = formatPath([
-              { name: CATALOGS_BLOCK, index: 0 },
-              { name: catalog.name, index: 0 },
-              { name: entry.name, index: row }
-            ])
-            return (
-              <tr key={rowPath} data-qmrf-path={rowPath}>
-                {columns.map((column) => {
-                  const text = value(entry, column)
-                  const href = linkHref(column, text)
-                  return (
-                    <td key={column}>
-                      {href ? (
-                        <a
-                          className="qmrf-external"
-                          href={href}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          {text}
-                        </a>
-                      ) : (
-                        text
-                      )}
-                    </td>
-                  )
-                })}
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
-    </section>
   )
 }

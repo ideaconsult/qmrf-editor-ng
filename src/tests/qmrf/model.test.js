@@ -9,6 +9,7 @@ import {
   openModel,
   parsePath,
   referencesTo,
+  removeAttr,
   removeElement,
   renameId,
   saveModel,
@@ -226,6 +227,46 @@ describe('identifiers', () => {
   it('leaves a document with no such id alone', () => {
     const model = openModel(fixture)
     expect(renameId(model, 'not_present', 'other')).toBe(model)
+  })
+})
+
+describe('dropping an attribute', () => {
+  it('removes the attribute rather than leaving it blank', () => {
+    const model = openModel(fixture)
+    // Every descriptor in the published document carries `publication_ref=""` — upstream spells an
+    // unfilled pointer that way. A control that answers "not cited" has to mean it.
+    const entry = P('Catalogs[0]/descriptors_catalog[0]/descriptor[0]')
+    expect(getAttr(model, entry, 'publication_ref')).toBe('')
+
+    const cleared = removeAttr(model, entry, 'publication_ref')
+    const line = saveModel(cleared)
+      .split('\n')
+      .find((row) => row.includes('descriptors_catalog_10'))
+    expect(line).toBeDefined()
+    expect(line).not.toContain('publication_ref')
+    // The sibling rows keep theirs, spans and all — the edit is one attribute wide.
+    expect(occurrenceCount(saveModel(cleared), 'publication_ref=""')).toBe(
+      occurrenceCount(saveModel(model), 'publication_ref=""') - 1
+    )
+    expect(validate(cleared).counts.error).toBe(0)
+  })
+
+  it('writes the value back when it is given one', () => {
+    const model = openModel(fixture)
+    const entry = P('Catalogs[0]/descriptors_catalog[0]/descriptor[0]')
+    const cited = setAttr(model, entry, 'publication_ref', 'publications_catalog_5')
+    expect(getAttr(cited, entry, 'publication_ref')).toBe('publications_catalog_5')
+    expect(saveModel(cited)).toContain('publication_ref="publications_catalog_5"')
+    expect(validate(cited).counts.error).toBe(0)
+    // And clearing what was just written returns to no attribute, not to `publication_ref=""`.
+    expect(getAttr(removeAttr(cited, entry, 'publication_ref'), entry, 'publication_ref')).toBe('')
+  })
+
+  it('is a no-op on an attribute the element never carried', () => {
+    const model = openModel(fixture)
+    const entry = P('Catalogs[0]/descriptors_catalog[0]/descriptor[0]')
+    const untouched = removeAttr(model, entry, 'not_an_attribute')
+    expect(saveModel(untouched)).toBe(saveModel(model))
   })
 })
 

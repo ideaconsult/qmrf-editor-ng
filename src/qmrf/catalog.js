@@ -13,8 +13,17 @@
  * @typedef {import('./xml.js').XmlElement} XmlElement
  */
 
-import { childSteps, collectIds, elementAt, insertOccurrence, parsePath, setAttr } from './model.js'
-import { headingAttrs } from './render.js'
+import {
+  childSteps,
+  collectIds,
+  collectReferences,
+  elementAt,
+  formatPath,
+  insertOccurrence,
+  parsePath,
+  setAttr
+} from './model.js'
+import { headingAttrs, headingOf } from './render.js'
 import { ELEMENTS, SPEC } from './spec.js'
 
 /** The two blocks under the root, named from the schema rather than hard-coded. */
@@ -43,6 +52,12 @@ export function catalogShape(/** @type {string} */ catalogName) {
 /** Where a catalog lives, in a document that has one. @returns {Path|null} */
 export function catalogPath(/** @type {string} */ catalogName) {
   return catalogShape(catalogName) ? parsePath(`${CATALOGS_BLOCK}[0]/${catalogName}[0]`) : null
+}
+
+/** The same address as the string the report and the outline match on. */
+export function catalogAddress(/** @type {string} */ catalogName) {
+  const path = catalogPath(catalogName)
+  return path ? formatPath(path) : ''
 }
 
 /**
@@ -141,4 +156,78 @@ export function addEntry(
     next = setAttr(next, inserted.path, spec.name, value)
   }
   return { model: next, path: inserted.path, id: wanted[shape.idAttr] ?? '' }
+}
+
+/** @typedef {{address: string, label: string}} Citation */
+
+/**
+ * Which entry is cited by whom, in one pass over the document.
+ *
+ * The per-entry question — "may this be dropped?" — is asked of every row of every catalog on every
+ * render, and `referencesTo` walks the whole document each time it is asked: with a real document's
+ * thirty-odd entries that is the slowest thing in the report. Same answer, grouped once.
+ *
+ * @param {Model} model
+ * @returns {Map<string, Citation[]>} keyed by the entry id as written
+ */
+export function citationIndex(/** @type {Model} */ model) {
+  /** @type {Map<string, Citation[]>} */
+  const index = new Map()
+  /** @type {Set<string>} */
+  const seen = new Set()
+  for (const ref of collectReferences(model)) {
+    if (ref.value === '') continue
+    // A `*_ref` child is held by the field that cites; an IDREF attribute sits on the citing
+    // element itself. Either way it is the field a reader recognises, not the pointer element.
+    const owner = ref.via === 'ref-element' ? ref.path.slice(0, -1) : ref.path
+    const address = formatPath(owner)
+    if (seen.has(`${ref.value}\u0000${address}`)) continue
+    seen.add(`${ref.value}\u0000${address}`)
+    const node = elementAt(model, owner)
+    const list = index.get(ref.value) ?? []
+    list.push({ address, label: node ? headingOf(node) || address : address })
+    index.set(ref.value, list)
+  }
+  return index
+}
+
+/**
+ * The fields that cite one entry, labelled the way the report labels them.
+ *
+ * A pointer's own element name means nothing to someone deciding whether an entry may be dropped;
+ * the field holding it is what they recognise — "1.3. Software coding the model", not
+ * `software_ref`.
+ *
+ * @param {Model} model
+ * @param {string} id the entry's handle, as written
+ * @returns {Citation[]} one per citing field, in document order, a field citing twice listed once
+ */
+export function entryCitations(/** @type {Model} */ model, /** @type {string} */ id) {
+  return citationIndex(model).get(id) ?? []
+}
+
+/** @typedef {{name: string, required: boolean, kind: string, values: string[], refCatalog: string}} EntryField */
+
+/**
+ * The attributes of an entry that are worth a control.
+ *
+ * The id is the handle the chapters point at rather than a field: changing it means rewriting every
+ * pointer to it, so the editor shows it as a handle and leaves it alone. `ontology_term` is a
+ * mapping this app does not interpret, and the read view leaves it out for the same reason.
+ *
+ * @param {string} catalogName
+ * @returns {EntryField[]} in the DTD's declared order
+ */
+export function entryFields(/** @type {string} */ catalogName) {
+  const shape = catalogShape(catalogName)
+  if (!shape) return []
+  return (ELEMENTS[shape.entryElement]?.dataAttrs ?? [])
+    .filter((attr) => attr.name !== shape.idAttr && attr.name !== 'ontology_term')
+    .map((attr) => ({
+      name: attr.name,
+      required: Boolean(attr.required),
+      kind: attr.kind,
+      values: attr.values ?? [],
+      refCatalog: attr.refCatalog ?? ''
+    }))
 }

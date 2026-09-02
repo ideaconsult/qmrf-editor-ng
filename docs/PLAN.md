@@ -1,7 +1,7 @@
 # Implementation Plan
 
-Status: **approved 2026-09-01; M0 (scaffold), M1 (schema + model), M2 (IO + viewer), M3 (shell)
-and M4 (field editors) complete.** M5–M6 outstanding.
+Status: **approved 2026-09-01; M0 (scaffold), M1 (schema + model), M2 (IO + viewer), M3 (shell),
+M4 (field editors) and M5 (catalogs) complete.** M6 outstanding.
 
 What M1 changed about this plan, in one line each: the field kinds are **eight**, not five (see
 the correction in the Domain section); parsing and writing share one `src/qmrf/xml.js` instead of
@@ -42,6 +42,24 @@ that came in bare bare; the 5/7 **repeat control is `ChapterTools` in `ReportVie
 **edit toggle shipped** with the editors that make it true. Field-level repeats inside
 `algorithm_explicit` (`algorithm_ref` + `equation`) are not editable yet — M5's catalog tables
 need the same insert machinery, so it moves there with them. Details in `AGENTS.md`.
+
+What M5 changed about this plan, in one line each: a catalog **reads as a table and edits as one
+form per entry**, not a grid of text boxes, and only one entry's form is mounted at a time — the
+published document has 22 entries and a descriptor-driven model can have a hundred, so "inputs in
+every cell" would build a thousand hidden controls; an entry's `id` is a **read-only handle**, not a
+field (`renameId` rewrites every pointer when a document really needs it; an uncited wrong id is
+removed and added again, which mints a free one and cannot strand a pointer); a delete is blocked by
+**pointer evidence rather than a guess**, and the dead control says which field has to let go, each
+citation a jump to it (`citationIndex` answers the whole document in one pass, computed once per
+render — asked per entry it walks the document once per row); a reference control's "nothing"
+**removes the attribute** (`removeAttr`) while a text control's blank writes `name=""`, because the
+fixture's `publication_ref=""` is upstream spelling an unfilled pointer, which the validator
+tolerates and a reader should not have to look at; `id` and `ontology_term` are out of both the
+columns and the editable fields (`entryFields`); the repeated-pair insert machinery M4 deferred to
+here **did ship** (`insertOccurrence`, which `addEntry` uses) but the `algorithm_explicit` repeat
+control still did not, and moved to `Deliberately Not Implemented` with the reason; and `testTimeout`
+went up because the suite's seconds are **jsdom, not the app** — measured, see `AGENTS.md`. Details
+in `AGENTS.md`.
 
 Naming settled during M0 in favour of the viewer role and this repo's folder: package
 `@ideaconsult/qmrf-viewer`, library global `QMRFViewer`, bundle `dist/qmrf-viewer.js`,
@@ -103,7 +121,20 @@ CI to satisfy: `pnpm install --frozen-lockfile` → `pnpm peers check` → `pnpm
 
 **M4 — field editors** (`src/components/fields/`). Shipped as: `FieldEditor.jsx` — the edit half of the `fieldKind` dispatch M2's `FieldView.jsx` started, so one `kind` decides both readings; `RichTextField` (contentEditable that React never writes while the caret is in it, plain-text paste, a toolbar limited to the tags legacy HTML actually uses, and `sanitize.js` applied to what it *stores*, not only to what it shows), `DateField` (+ `src/qmrf/dates.js`, format-preserving), `QuestionField` (Yes/No and All/Some/No/Unknown radios, plus the 7-flag grid, off the DTD's own enums), `ReferenceField` (+ `src/qmrf/catalog.js`: cite an existing entry, mint one, repoint, stop citing — and `EndpointPicker` for the vocabulary), `AttachmentField` (`molecules`/`document`: url/embedded/filetype/description), `Controls.jsx` for the shared row primitives — one write per commit, on blur rather than per keystroke, so one edit is one undo step. `ReportView`'s `ChapterTools` adds and removes the repeated chapters 5 and 7. `scroll.js` keeps the reader in place across all of it. The **edit toggle** M3 deferred shipped here, in `Header`, as a View/Edit fieldset that flips the dispatch for every field at once; `readOnly` removes it and the editors together.
 
-**M5 — catalogs.** Six editable tables with ID minting; delete blocked with a reference list when an entry is `idref`-ed.
+**M5 — catalogs.** Shipped as: `src/components/Catalogs.jsx`, appended to the report by `ReportView`
+when the document has a `Catalogs` block — a table to read (`Table`, columns in the DTD's own order,
+`id`/`ontology_term` left out of both columns and fields by `entryFields`) and one accordion row per
+entry to work in (`EntryEditor`: a toggle naming the entry, its id as a read-only handle, the
+citation line, and `EntryAttr` — a `TextRow` or, for an IDREF attribute like `publication_ref`, a
+picker into the other catalog whose "not cited" calls `removeAttr`). `AddBar` grows a catalog through
+`addEntry` (`catalog.js`), which mints the next id the document's own numbering implies and returns
+the entry and its pointer as one model write, so one Undo takes both back; the refusal — a document
+with no such catalog element — is a `role="status"` sentence, not silence. Who cites what comes from
+`citationIndex(model)`, computed once where the six tables are rendered and handed down;
+`entryCitations` answers a single entry off the same map. A cited entry's Remove is `disabled` and its
+`title`/paragraph name the fields that hold it, each of them a `showAddress` jump to the citation that
+has to be released first. Delete of an uncited entry takes the blank line in front of it with it
+(`removeElement`), leaving the rest of the file byte-identical.
 
 **M6 — finish.** Issue list with click-to-field navigation, version-drift banner, `build:lib` verified, README documenting the props API and the future one-entry `viewers.js` registration.
 
