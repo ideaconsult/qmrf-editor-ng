@@ -18,3 +18,27 @@ body {
   max-width: 1280px;
   padding: 16px;
 }
+
+/* The page geometry of a QMRF printed for a dossier, which is the one thing a component stylesheet
+   cannot own: `@page` has no selector, so an embedded viewer that set it would be laying out its
+   host's document. It lives here — where only the standalone app can reach it — mirroring upstream's
+   `new Document(PageSize.A4, 80, 50, 30, 65)`, whose margins arrive in top/right/bottom/left order. */
+@media print {
+  @page {
+    margin: 30pt 50pt 65pt 80pt;
+    size: A4;
+  }
+
+  /* A full-height body is what makes the on-screen viewer scroll; on paper it clips the report to a
+     page, and the wrapper's padding would print as an indent. */
+  html,
+  body,
+  #root {
+    height: auto;
+  }
+
+  .qmrf-app {
+    max-width: none;
+    padding: 0;
+  }
+}

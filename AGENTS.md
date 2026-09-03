@@ -109,11 +109,11 @@ any UI layer. Tests live in `src/tests/qmrf/`.
 | `history.js` | undo/redo over those immutable models: `mergeKey` folds a typing gesture into one step, `markSaved`/`isDirty` track the saved index rather than a boolean. |
 | `html.js` | the rich-text **envelope** and nothing else: `fieldHtml` (body out), `wrapHtml` (body back in the form the Java kit wrote), `hasEnvelope` (whether a field had one to begin with — see fidelity rule 6), `plainText` (one readable line, for titles and search). DOM-free; sanitisation belongs to `src/components/sanitize.js`. |
 | `dates.js` | the four date fields' **own shapes**: `dateFormatOf` reads which of `dd.MM.yyyy`, `yyyy-MM-dd`, `dd/MM/yyyy`, `yyyy/MM/dd` a value is written in, `formatDate`/`todayIn` write a day back in that shape. Refuses to guess at anything else (`09-12-03` is three plausible answers, not a format). |
-| `catalog.js` | what a catalog holds and how a new entry joins it: `catalogShape`/`catalogPath`/`catalogAddress` (the six shapes, and the address a catalog renders at), `catalogEntries`/`entryOptions` (a label per entry, read off its own heading attributes), `entryFields` (the attributes an entry may be *edited as* — `id` and `ontology_term` excluded, each with `required`/`refCatalog`), `mintId` (next free `<catalog>_N`), `addEntry` — one write that appends the entry with the DTD's attributes in DTD order, and returns `null` when the document has no such catalog to append to, `citationIndex`/`entryCitations` (which field cites which entry, **one pass over the document** for the whole question, blank pointers excluded). The reference editors and the catalog tables both go through these. |
+| `catalog.js` | what a catalog holds and how a new entry joins it: `catalogShape`/`catalogPath`/`catalogAddress` (the six shapes, and the address a catalog renders at), `catalogEntries`/`entryOptions` (a label per entry, read off its own heading attributes), `entryFields` (the attributes an entry may be *edited as* — `id` and `ontology_term` excluded, each with `required`/`refCatalog`), `mintId` (next free `<catalog>_N`), `addEntry` — one write that appends the entry with the DTD's attributes in DTD order, **creating the `Catalogs` block and the `*_catalog` element the document skipped** (both through `insertOccurrence`, so the DTD's own sequence picks the position), returning `null` only for a name that is not one of the six, `citationIndex`/`entryCitations` (which field cites which entry, **one pass over the document** for the whole question, blank pointers excluded). The reference editors and the catalog tables both go through these. |
 | `io.js` | the only browser I/O: `readText` (`File`), `fetchText` (with bearer token, status kept in the message), `downloadText`, `suggestedFilename`. Everything above it works on text. |
 | `newDocument.js` | the skeleton a New document starts from, **generated from `spec.js`** — required children only, `#FIXED` attributes from the DTD, required answers from the DTD's own enum. It validates with zero issues; upstream's hand-written `qmrf.xml` template does not (8 missing `catalog` attributes, `version="3.0.1"`). |
 | `render.js` | the *reading* rules of the report view: which element is a field (`fieldKind`), how a heading reads (`headingOf`, from the document's own attrs), what a pointer shows (`resolveReference`), which flags and files a field lists, and what counts as a link (`linkHref` refuses a bare scheme). |
-| `outline.js` | what the sidebar lists: the document's own chapters (drifted heading and all) and catalogs, each with the findings attributed to it. The chapters come from the document, not from `SPEC`, so a repeated chapter appears once per occurrence. `totalOf(outline)` must equal `validate(model).counts`. |
+| `outline.js` | what the sidebar lists: the document's own chapters (drifted heading and all) and catalogs, each with the findings attributed to it. The chapters come from the document, not from `SPEC`, so a repeated chapter appears once per occurrence. `buildOutline(model, report, {allCatalogs})` lists the six declared catalogs instead of the held ones — the shell sets it only while the editors are showing, which is exactly when `Catalogs.jsx` renders the same six, so a row never leads to a heading that is not in the report. `totalOf(outline)` must equal `validate(model).counts`. |
 | `vocab/endpoints.js` | the vendored 347-row endpoint vocabulary (`endpoints-source.xml`), parsed at first use. A **picker**: picking a term mints one `endpoints_catalog` entry carrying the vocabulary's id; documents are never seeded with the whole list. |
 
 **Deliberate departures from the file list in [docs/PLAN.md](./docs/PLAN.md):** there is no
@@ -137,7 +137,7 @@ second entry (`@ideaconsult/qmrf-viewer/endpoints`) or a data URL, not an unanno
 
 `src/hooks/useDocument.js` is the only place React meets the core: it owns the history, the
 validation report, `dirty`, and the open/create/edit/save/undo actions. Components below it are
-presentational (`Toolbar` takes three callbacks, nothing else), so the same pieces serve the
+presentational (`Toolbar` takes callbacks and nothing else), so the same pieces serve the
 standalone app, a host embed and the editor.
 
 ### The shell is two contexts, not a prop chain
@@ -246,6 +246,25 @@ standalone app, a host embed and the editor.
     picker into the other catalog whose "not cited" **removes** the attribute (`removeAttr`). A text
     attribute's blank still writes `name=""`: that is how the Java editors spell an unfilled field,
     and the fixture is full of it.
+  - **The six are listed while the editors are showing, the held ones while they are not.**
+    `<!ELEMENT QMRF (QMRF_chapters,Catalogs)>` *requires* the block, so a document with no
+    `Catalogs` — or with two of the six — is short of the schema rather than exempt from it, and a
+    viewer that only ever showed what it found left such a file permanently unfixable: no appendix,
+    no outline row, and no Add on any chapter field that mints an entry, which is exactly how a real
+    document reached the state where nothing could be added. `addEntry` writes the missing
+    `Catalogs`/`*_catalog` where the DTD's sequence puts them, and `outline.js` is given the same
+    six via `{allCatalogs: editing}` so a row only exists where something opens. A read-only host
+    sees only the catalogs the document holds: no dead links either way.
+- **Printing is a deliverable, not an afterthought** — a QMRF is attached to an ECHA submission as
+  paper. `Header`'s Print button flips the report to its read view with `flushSync` (an entry form
+  is not a filed document, and in the edit view the catalogs are forms rather than tables) and then
+  calls `window.print()`; the mode stays on View so screen and page agree. The stylesheet is
+  upstream's `QMRF_xml2pdf.java` in CSS — A4, 10 pt body, chapter titles in bold Times on
+  `#E6E6E6`, the identity block as a cover, table headers repeating across a break, the catalogs as
+  an annex on their own page, and none of the app's chrome or warnings. **`@page` is the one rule
+  that cannot be scoped to `.qmrf-root`,** so the page geometry lives in `app-globals.css` (which
+  library code must never load) and a host sets its own if it wants the dossier margins; page
+  numbers are the print dialog's own option, since Chrome ignores CSS page margin boxes.
 - `src/tests/catalogs.test.jsx` asserts the guards against `saveModel`'s bytes, and queries each
   control **inside its own catalog's block**: chapter 3.2 legitimately has an "Add endpoint" of its
   own — a vocabulary picker that cites this catalog — so a whole-report query for that name finds two
@@ -332,9 +351,15 @@ filters a run (`pnpm test -- <name>` passes the `--` through as a filter, which 
   the report (or one shown while its field has focus) acting on the focused field; it is a layout
   decision, so it is not being made as a side effect of a milestone. It is also the reason the test
   suite is slow — see the note under Commands.
+- **A catalog that repeats.** The DTD declares `software_catalog*` inside `Catalogs`, so a document
+  may carry two `<software_catalog>` elements. Addresses, the appendix and the outline all name the
+  first occurrence, so the second one's entries are neither shown nor edited. It is the same shape of
+  gap as the field-level repeats above, one rarer than the other; the fix is the same
+  `occurrences`-aware addressing, not a special case.
 - SpectraSearch registry entry (no QSAR-model result type exists there yet).
-- Report export to HTML/RTF/PDF/Excel (upstream uses freemarker `qmrf.ftl`, `qmrf_rtf.ftl`,
-  `table.ftl`).
+- Report export to HTML/RTF/Excel (upstream uses freemarker `qmrf.ftl`, `qmrf_rtf.ftl`,
+  `table.ftl`). PDF is **not** on this list any more: the browser's print-to-PDF over the print
+  stylesheet is the shipped route, and it is the one the user can check before pressing the button.
 - Ontology-term lookup (upstream `qmrf-annotation`); `ontology_term` stays free text.
 - PMML — `qmrf-pmml` is commented out of the upstream root `pom.xml`, i.e. dead.
 - Schema versions 1.0 / 1.1 (`schema/1.0/qmrf.dtd`, `schema/1.1/qmrf.dtd` exist on disk).

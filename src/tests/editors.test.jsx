@@ -431,17 +431,26 @@ describe('the endpoint vocabulary', () => {
     expect(rows(ENDPOINT)).toHaveLength(1)
   })
 
-  it('says why it could not add, when the document has nowhere to put the term', () => {
+  it('writes the catalog the document skipped, and cites the term into it', () => {
     render(<Harness xml={NO_ENDPOINT_CATALOG} />)
     editOn()
-    // The picker itself still works — the 347 terms are outside the document — but the entry it has
-    // to mint has no catalog to go into, and the field has to own up to that.
+    // The picker's 347 terms are outside the document either way. What the document lacks is a place
+    // to mint one — and `<!ELEMENT QMRF (QMRF_chapters,Catalogs)>` requires that place, so the add
+    // writes the catalog the file skipped rather than refusing a term nobody can record.
+    expect(saved()).not.toContain('<endpoints_catalog>')
     expect(within(picker()).getByRole('button', { name: 'Add endpoint' })).toBeEnabled()
     fireEvent.click(within(picker()).getByRole('button', { name: 'Add endpoint' }))
-    expect(within(field(ENDPOINT)).getByRole('status').textContent).toMatch(
-      /no endpoints catalog for QMRF 1\. 1\. Melting point/
-    )
-    expect(dirty()).toBe(false)
+
+    expect(saved()).toContain('<endpoints_catalog>')
+    expect(saved()).toContain('id="endpoint1_340"')
+    expect(saved()).toContain('QMRF 1. 1. Melting point')
+    expect(rows(ENDPOINT)).toHaveLength(2)
+
+    // Entry, pointer and the element that holds them were one write, so one step takes all three.
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }))
+    expect(saved()).not.toContain('endpoint1_340')
+    expect(saved()).not.toContain('<endpoints_catalog>')
+    expect(rows(ENDPOINT)).toHaveLength(1)
   })
 })
 

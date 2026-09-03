@@ -162,6 +162,30 @@ it stands; README's props table, the reader-facing behaviour, and the future one
 registration with its `kind: "route"` requirement. `build:lib` was verified against the two-file
 output, and the endpoint vocabulary's `import()` was measured and declined (see `AGENTS.md`).
 
+### M7 — what the first real use found
+
+Two things the milestones could not predict, both from opening a real file in the app:
+
+- **A document with no `Catalogs` block was not editable at all.** The appendix, the outline rows and
+  every chapter field's "Add" were each gated on an element that a real file had not written, so
+  nothing could be added anywhere — and the DTD *requires* that block, so the validator was already
+  calling it a defect while the UI treated it as a read-only fact. `addEntry` now creates the
+  `Catalogs` block and the missing `*_catalog` through `insertOccurrence`, which picks the position
+  from the DTD's own sequence; `Catalogs.jsx` and `outline.js` show the declared six while the
+  editors are open and the held ones otherwise, so a row never leads nowhere. Entry, element, block
+  and pointer arrive as one write, so one Undo removes all of it.
+- **PDF is the deliverable, not the file.** People print a QMRF and attach the paper to an ECHA
+  submission, which makes print fidelity a first-class requirement rather than a browser courtesy.
+  The route chosen was print CSS plus a Print button (over generating a PDF in the app, and over
+  upstream's XSL-FO/FOP chain): the button switches to the read view with `flushSync` before
+  `window.print()`, because in the edit view the catalogs are entry forms rather than tables. The
+  stylesheet mirrors `QMRF_xml2pdf.java` — A4, its margins, 10 pt body, bold Times chapter titles on
+  `#E6E6E6`, the identity block as a cover, the six catalogs as an annex — and, because `@page`
+  cannot be scoped, the page geometry stays in `app-globals.css` where only the standalone app can
+  reach it. `@page` margin boxes are unsupported in Chrome, so page numbers remain the dialog's
+  headers-and-footers option; that and the print stylesheet are still the two things in this app that
+  need a real browser to confirm (see Verification).
+
 ### Deliberate deviations from the siblings
 
 Plain JS with no lint is what produced the failure modes the qubounds audit turned up — an orphaned `CompoundInput.jsx` calling a hook that does not exist, a control wired to `onConfidenceChange={() => {}}`, styles unreachable from a field the tree builder never produces, helpers "tested" by copy-pasting their logic into the test file, and `catch { }` swallowing errors. Since our core is a hand-written DTD spec, ID/IDREF integrity and a serializer, `checkJs` + Biome are added from commit 1, plus a `pnpm lint`/`pnpm typecheck` CI step. Everything else stays convention-shaped.

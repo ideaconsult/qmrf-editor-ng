@@ -47,26 +47,29 @@ import { TextRow } from './fields/Controls.jsx'
 const HIDDEN_COLUMNS = ['id', 'ontology_term']
 
 /**
- * @param {{model: Model, block: XmlElement}} props
+ * @param {{model: Model, block: XmlElement|null}} props the `Catalogs` element, or null when the
+ *   document holds none — which `<!ELEMENT QMRF (QMRF_chapters,Catalogs)>` does not permit, and
+ *   plenty of real files do anyway.
  */
 export default function Catalogs({ model, block }) {
   const editing = useEditing()
-  const catalogs = elements(block).filter((catalog) =>
-    SPEC.catalogs.some((entry) => entry.name === catalog.name)
-  )
-  if (catalogs.length === 0) return null
+  const held = (block ? elements(block) : [])
+    .filter((catalog) => SPEC.catalogs.some((entry) => entry.name === catalog.name))
+    .map((catalog) => catalog.name)
+  // A reader sees the catalogs this document holds; whoever may edit sees all six, because the ones
+  // the file skipped are exactly what they need to reach — the Add in a section that is not there yet
+  // writes the missing `Catalogs`/`*_catalog` on the spot. The two modes differ for the same reason
+  // a menu does not list a dish with nothing behind it: a read-only embed never offers a heading that
+  // has no table, and no sidebar row lands nowhere. Order is the schema's in edit mode, so the six do
+  // not reshuffle as entries arrive.
+  const names = editing ? SPEC.catalogs.map((entry) => entry.name) : held
+  if (names.length === 0) return null
   const cited = citationIndex(model)
   return (
     <section className="qmrf-catalogs">
       <h3 className="qmrf-catalogs-heading">Catalogs</h3>
-      {catalogs.map((catalog) => (
-        <Catalog
-          key={catalog.name}
-          model={model}
-          catalog={catalog}
-          editing={editing}
-          cited={cited}
-        />
+      {names.map((name) => (
+        <Catalog key={name} model={model} name={name} editing={editing} cited={cited} />
       ))}
     </section>
   )
@@ -75,22 +78,22 @@ export default function Catalogs({ model, block }) {
 /**
  * @param {{
  *   model: Model,
- *   catalog: XmlElement,
+ *   name: string,
  *   editing: boolean,
  *   cited: Map<string, Citation[]>
  * }} props
  */
-function Catalog({ model, catalog, editing, cited }) {
+function Catalog({ model, name, editing, cited }) {
   const { uid } = useViewerConfig()
   const [open, setOpen] = useState('')
-  const shape = SPEC.catalogs.find((entry) => entry.name === catalog.name)
-  const entries = catalogEntries(model, catalog.name)
-  const label = shape?.label ?? catalog.name.replace(/_catalog$/, '')
-  const blurb = CATALOG_NOTES[catalog.name] ?? ''
+  const shape = SPEC.catalogs.find((entry) => entry.name === name)
+  const entries = catalogEntries(model, name)
+  const label = shape?.label ?? name.replace(/_catalog$/, '')
+  const blurb = CATALOG_NOTES[name] ?? ''
   // The catalog's own address, so the outline can jump here, and an id prefixed with this viewer's
   // uid, so two viewers in one host page do not share anchors.
-  const address = catalogAddress(catalog.name)
-  const id = `${uid}-catalog-${catalog.name}`
+  const address = catalogAddress(name)
+  const id = `${uid}-catalog-${name}`
 
   if (!editing) {
     if (entries.length === 0)
@@ -116,7 +119,7 @@ function Catalog({ model, catalog, editing, cited }) {
     )
   }
 
-  const fields = entryFields(catalog.name)
+  const fields = entryFields(name)
   return (
     <section className="qmrf-catalog" id={id} data-qmrf-path={address}>
       <h4 className="qmrf-catalog-heading">
@@ -138,7 +141,7 @@ function Catalog({ model, catalog, editing, cited }) {
         )
       })}
       <AddBar
-        catalog={catalog.name}
+        catalog={name}
         label={label}
         entryElement={shape?.entryElement ?? 'entry'}
         onAdded={(path) => setOpen(path)}
@@ -351,9 +354,14 @@ function EntryAttr({ model, entry, field, current, onApply }) {
 }
 
 /**
- * The one control that grows a catalog. It says so when the document has nowhere to put the entry —
- * the same rule every other add in this app follows, that a refusal is worth a sentence — and it
- * opens the entry it made, which is the only thing the reader is going to do next with it.
+ * The one control that grows a catalog.
+ *
+ * `addEntry` builds the `Catalogs` block and the catalog element if the document is short of them, so
+ * an add here works on a file that never had a catalog at all — which is the whole reason the
+ * appendix lists the six in edit mode rather than only the ones present. The note stays because the
+ * rule it serves is still the one every other add follows, that a refusal is worth a sentence; it now
+ * only fires for a name that is not one of the six. And the control opens the entry it made, which is
+ * the only thing the reader is going to do next with it.
  *
  * @param {{catalog: string, label: string, entryElement: string, onAdded: (address: string) => void}} props
  */
@@ -366,7 +374,7 @@ function AddBar({ catalog, label, entryElement, onAdded }) {
   const add = () => {
     const added = addEntry(model, catalog)
     if (!added) {
-      setNote(`This document has no ${catalog} element to add an entry to.`)
+      setNote(`Nothing in this document can hold a ${label.toLowerCase()} entry.`)
       return
     }
     setNote('')

@@ -110,7 +110,9 @@ export default function ReferenceField({
     }
     const added = addEntry(model, catalog, term.entry)
     if (!added) {
-      setNote(`This document has no ${lower(label)} catalog for ${term.name} to go into.`)
+      setNote(
+        `There is no ${lower(label)} catalog in this schema, so ${term.name} has nowhere to go.`
+      )
       return
     }
     pointerInto(added.model, added.id, term.name)
@@ -119,7 +121,7 @@ export default function ReferenceField({
   const createEntry = () => {
     const added = addEntry(model, catalog)
     if (!added) {
-      setNote(`This document has no ${lower(label)} catalog to add an entry to.`)
+      setNote(`There is no ${lower(label)} catalog in this schema to add an entry to.`)
       return
     }
     pointerInto(added.model, added.id, `new ${lower(label)} entry`)

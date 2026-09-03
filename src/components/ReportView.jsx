@@ -64,7 +64,11 @@ export default function ReportView({ model }) {
         </dl>
       </header>
       {chapterBlock ? chapters(model, chapterBlock, editing) : null}
-      {catalogBlock ? <Catalogs model={model} block={catalogBlock} /> : null}
+      {/* Rendered whether or not the document got as far as writing a `Catalogs` element: in edit mode
+          the six are where an entry is minted, and `Catalogs` itself decides when there is nothing to
+          show — a reader of a file with no block at all sees no appendix, as upstream's stylesheet
+          intended, rather than six headings over an empty page. */}
+      <Catalogs model={model} block={catalogBlock ?? null} />
     </article>
   )
 }

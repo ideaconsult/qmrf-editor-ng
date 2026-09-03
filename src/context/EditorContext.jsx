@@ -60,9 +60,16 @@ export function EditorProvider({ xml, url, token, onSave, children }) {
   const [focus, setFocus] = useState(/** @type {string|null} */ (null))
   const reportRef = useRef(/** @type {HTMLDivElement|null} */ (null))
 
+  // The same pair the value below publishes, computed once so the outline and the report cannot
+  // disagree about which catalogs the reader is allowed to reach: `ReportView` lists all six exactly
+  // while the editors are showing, and an outline row exists only where one of them will be rendered.
+  const editable = !readOnly
+  const isEditing = editing && !readOnly
+
   const outline = useMemo(
-    () => (doc.model ? buildOutline(doc.model, doc.report) : emptyOutline()),
-    [doc.model, doc.report]
+    () =>
+      doc.model ? buildOutline(doc.model, doc.report, { allCatalogs: isEditing }) : emptyOutline(),
+    [doc.model, doc.report, isEditing]
   )
 
   // Where the page stood when the document last changed is where it belongs afterwards: an entry
@@ -113,14 +120,14 @@ export function EditorProvider({ xml, url, token, onSave, children }) {
       doc,
       outline,
       focus,
-      editable: !readOnly,
-      editing: editing && !readOnly,
+      editable,
+      editing: isEditing,
       setEditing,
       showAddress,
       markAddress,
       reportRef
     }),
-    [doc, outline, focus, readOnly, editing, showAddress, markAddress]
+    [doc, outline, focus, editable, isEditing, showAddress, markAddress]
   )
 
   return <EditorContext.Provider value={value}>{children}</EditorContext.Provider>

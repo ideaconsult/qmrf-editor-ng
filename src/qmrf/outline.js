@@ -69,9 +69,14 @@ export function emptyOutline() {
 /**
  * @param {Model} model
  * @param {Report|null} [report]
+ * @param {{allCatalogs?: boolean}} [options] `allCatalogs` lists the six the schema declares rather
+ *   than only the ones this document holds. A shell sets it when its Add controls can write a missing
+ *   `Catalogs` block into existence — which makes the row true rather than decorative, since the
+ *   appendix renders the same six in that state and the jump has something to land on. Somewhere the
+ *   host may not write, a row for a catalog with no element behind it would be a dead link.
  * @returns {Outline}
  */
-export function buildOutline(model, report = null) {
+export function buildOutline(model, report = null, options = {}) {
   const blocks = model.root ? elements(model.root) : []
   const chapterBlock = blocks.find((block) => block.name === CHAPTERS_BLOCK)
   const catalogBlock = blocks.find((block) => block.name === CATALOGS_BLOCK)
@@ -100,21 +105,27 @@ export function buildOutline(model, report = null) {
     }
   })
 
-  const catalogs = (catalogBlock ? elements(catalogBlock) : [])
-    .filter((node) => SPEC.catalogs.some((entry) => entry.name === node.name))
-    .map((node) => {
-      const shape = SPEC.catalogs.find((entry) => entry.name === node.name)
-      return {
-        name: node.name,
-        label: shape?.label ?? node.name.replace(/_catalog$/, ''),
-        address: formatPath([
-          { name: CATALOGS_BLOCK, index: 0 },
-          { name: node.name, index: 0 }
-        ]),
-        entries: elements(node).length,
-        counts: findings.catalogs[node.name] ?? emptyCounts()
-      }
-    })
+  /** @type {Record<string, XmlElement>} the catalogs this document holds, first occurrence each */
+  const held = {}
+  for (const node of catalogBlock ? elements(catalogBlock) : []) {
+    if (SPEC.catalogs.some((entry) => entry.name === node.name) && !(node.name in held))
+      held[node.name] = node
+  }
+  const names = options.allCatalogs ? SPEC.catalogs.map((entry) => entry.name) : Object.keys(held)
+  const catalogs = names.map((name) => {
+    const node = held[name]
+    const shape = SPEC.catalogs.find((entry) => entry.name === name)
+    return {
+      name,
+      label: shape?.label ?? name.replace(/_catalog$/, ''),
+      address: formatPath([
+        { name: CATALOGS_BLOCK, index: 0 },
+        { name, index: 0 }
+      ]),
+      entries: node ? elements(node).length : 0,
+      counts: findings.catalogs[name] ?? emptyCounts()
+    }
+  })
 
   return { chapters, catalogs, document: findings.document }
 }

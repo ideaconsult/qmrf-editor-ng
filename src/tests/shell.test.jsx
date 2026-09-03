@@ -172,6 +172,25 @@ describe('the outline', () => {
       document.querySelector('[data-qmrf-path="Catalogs[0]/software_catalog[0]"]')
     ).not.toBeNull()
   })
+
+  it('lists the catalogs a document lacks while its editor is open', () => {
+    // A file that never wrote a `Catalogs` element. Reading it, there is nothing to list; working on
+    // it, all six are, because the Add behind each row writes the missing element — so a row leads
+    // somewhere instead of to a heading that is not in the report.
+    const xml = fixture.replace(/\s*<Catalogs>[\s\S]*?<\/Catalogs>/, '')
+    render(<Harness xml={xml} />)
+    expect(screen.queryAllByRole('button', { name: /^Software(,|$)/ })).toHaveLength(0)
+    expect(screen.queryAllByRole('button', { name: /^Publications(,|$)/ })).toHaveLength(0)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
+    expect(navItem('Software').textContent).toContain('0 entries')
+    fireEvent.click(navItem('Publications'))
+    expect(scrollIntoView).toHaveBeenCalledTimes(1)
+    expect(navItem('Publications')).toHaveAttribute('aria-current', 'true')
+    expect(
+      document.querySelector('[data-qmrf-path="Catalogs[0]/publications_catalog[0]"]')
+    ).not.toBeNull()
+  })
 })
 
 describe('the header', () => {
@@ -278,5 +297,38 @@ describe('the findings list', () => {
   it('is not there at all when there is nothing to say', () => {
     render(<Harness xml={newDocumentText()} />)
     expect(document.querySelector('.qmrf-findings')).toBeNull()
+  })
+})
+
+describe('printing', () => {
+  // A QMRF is filed on paper — the printed report is what a dossier attaches — so the Print button is
+  // a first-class action, and what it prints has to be the report rather than the editing form.
+  it('prints the report, not the form it was being edited in', () => {
+    const printed = vi.fn()
+    vi.stubGlobal('print', printed)
+    render(<Harness />)
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
+    expect(document.querySelector('.qmrf-catalog-table')).toBeNull()
+
+    fireEvent.click(within(header()).getByRole('button', { name: 'Print / PDF' }))
+    expect(printed).toHaveBeenCalledTimes(1)
+    // The read view is what the reader is left looking at, so the page and the screen agree.
+    expect(screen.getByRole('button', { name: 'View' })).toHaveAttribute('aria-pressed', 'true')
+    expect(document.querySelector('.qmrf-catalog-table')).not.toBeNull()
+    vi.unstubAllGlobals()
+  })
+
+  it('is offered to a read-only viewer too', () => {
+    // Printing is how most people use a viewer at all; needing write permission to hand in a PDF of
+    // somebody else's model would be absurd.
+    render(
+      <ViewerConfigProvider config={{ readOnly: true, uid: 'test' }}>
+        <EditorProvider xml={fixture}>
+          <Shell>{null}</Shell>
+        </EditorProvider>
+      </ViewerConfigProvider>
+    )
+    expect(within(header()).getByRole('button', { name: 'Print / PDF' })).toBeEnabled()
+    expect(within(header()).queryByRole('button', { name: 'Edit' })).toBeNull()
   })
 })

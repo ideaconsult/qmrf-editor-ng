@@ -952,14 +952,176 @@
   text-decoration: underline;
 }
 
+/* ---------- print ----------
+
+   The report as a PDF is not a nice-to-have: a QMRF is filed on paper, attached to an ECHA
+   submission. The reference is upstream's `QMRF_xml2pdf.java` — A4 with `80, 50, 30, 65` pt margins,
+   10 pt Helvetica body, 11 pt bold Times chapter titles on a `#E6E6E6` band, and one chapter
+   outline entry per chapter — so this block is that document in CSS rather than an invention.
+
+   Two things it deliberately does not do, both because a `@page` rule is the one thing in a
+   stylesheet that cannot be scoped to `.qmrf-root`:
+
+   - **Page size and margins** live in `styles/app-globals.css`, which only the standalone app
+     loads. An embedded viewer that set A4 and 80 pt of left margin would be laying out its host's
+     whole page. A host that wants the dossier geometry adds it itself:
+     `@page { size: A4; margin: 30pt 50pt 65pt 80pt }`.
+   - **Page numbers**: `@page` margin boxes are not honoured by Chrome, so those come from the print
+     dialog's own headers-and-footers option — which is also where a date belongs. */
+
 @media print {
+  .qmrf-root {
+    /* The grey chapter bands and the "names no entry" background are the report speaking, and a
+       browser paints no background unless it is told this one is content. */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    font-size: 10pt;
+    line-height: 1.35;
+  }
+
+  /* Chrome first: nothing the reader clicks belongs on the page. */
   .qmrf-header,
-  .qmrf-toolbar,
-  .qmrf-side {
+  .qmrf-banner,
+  .qmrf-side,
+  .qmrf-empty,
+  .qmrf-chapter-tools,
+  .qmrf-rich-tools,
+  .qmrf-edit-add,
+  .qmrf-edit-note,
+  .qmrf-edit-hint,
+  .qmrf-edit-empty,
+  .qmrf-edit-list,
+  .qmrf-edit-row,
+  .qmrf-catalog-entry-head,
+  .qmrf-catalog-used,
+  .qmrf-attachment-edit,
+  .qmrf-attachments-edit {
     display: none;
   }
 
-  .qmrf-layout {
-    grid-template-columns: minmax(0, 1fr);
+  /* Belt and braces for a host that calls `print()` itself: whatever control is on screen is not
+     part of a QMRF report. Note what this cannot do — in the edit view the catalogs are entry
+     forms rather than tables, so it is the Print button's switch to the read view that puts the
+     tables on the page at all. */
+  .qmrf-report button,
+  .qmrf-report input,
+  .qmrf-report select,
+  .qmrf-report textarea,
+  .qmrf-report [data-qmrf-edit],
+  .qmrf-report [contenteditable] {
+    display: none;
+  }
+
+  /* One column, no scroll container, no measure to respect: the page is the measure. */
+  .qmrf-layout,
+  .qmrf-report-area {
+    display: block;
+    overflow: visible;
+  }
+
+  .qmrf-report {
+    max-width: none;
+    padding: 0;
+  }
+
+  /* The cover, which is upstream's `headerTable`: the model and who says so, above a rule. */
+  .qmrf-document {
+    border-bottom: 1.5pt solid #444;
+    break-after: avoid;
+    break-inside: avoid;
+    margin-bottom: 12pt;
+    padding-bottom: 8pt;
+  }
+
+  .qmrf-document-title {
+    font-size: 16pt;
+    margin-bottom: 6pt;
+  }
+
+  .qmrf-document-meta {
+    font-size: 9pt;
+    gap: 2pt 14pt;
+  }
+
+  /* The chapter band, the one visual the Java PDF is recognised by. Times bold on grey, because
+     that is what `bfont` and `chapterColor` produce, and a dossier that looks like the old one is
+     worth more to its author than one that matches this app's screen. */
+  .qmrf-chapter-heading,
+  .qmrf-catalogs-heading {
+    background: #e6e6e6;
+    break-after: avoid;
+    break-inside: avoid;
+    font-family: "Times New Roman", Times, serif;
+    font-size: 11pt;
+    margin: 12pt 0 6pt;
+    padding: 2pt 5pt;
+  }
+
+  .qmrf-catalogs {
+    /* The six catalogs are this app's addition to the report, so they get an annex's treatment:
+       their own page rather than the tail of whatever chapter ended last. */
+    break-before: page;
+    border-top: 0;
+    margin-top: 0;
+    padding-top: 0;
+  }
+
+  .qmrf-catalog-heading {
+    break-after: avoid;
+    font-size: 10.5pt;
+    margin: 10pt 0 3pt;
+  }
+
+  .qmrf-field-heading {
+    break-after: avoid;
+    color: #333;
+    font-size: 9.5pt;
+  }
+
+  .qmrf-catalog-count {
+    background: none;
+    border: 0.5pt solid #999;
+    color: #333;
+    font-size: 8pt;
+    padding: 0 3pt;
+  }
+
+  .qmrf-catalog-table td,
+  .qmrf-catalog-table th,
+  .qmrf-field-body td,
+  .qmrf-field-body th {
+    border: 0.5pt solid #999;
+    padding: 2pt 4pt;
+  }
+
+  .qmrf-catalog-table thead,
+  .qmrf-field-body thead {
+    display: table-header-group;
+  }
+
+  /* Never a heading alone at the foot of a page. */
+  .qmrf-report h2,
+  .qmrf-report h3,
+  .qmrf-report h4 {
+    break-after: avoid;
+  }
+
+  /* Only the short things are kept whole: `break-inside: avoid` on a field that holds pages of
+     prose is how a report grows half-empty pages. */
+  .qmrf-field--question,
+  .qmrf-field--date,
+  .qmrf-field--entry,
+  .qmrf-field--reference,
+  .qmrf-ref,
+  .qmrf-attachment,
+  .qmrf-document-meta-row,
+  .qmrf-catalog-table tr,
+  .qmrf-field-body tr {
+    break-inside: avoid;
+  }
+
+  .qmrf-report p {
+    orphans: 2;
+    widows: 2;
   }
 }

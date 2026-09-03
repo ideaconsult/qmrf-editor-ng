@@ -73,7 +73,15 @@ under `readOnly: true`, which is the shape of a host that owns validation and do
   document as it stands. Nothing here rewrites a drifted version or a drifted label.
 - **The six catalogs as an appendix** of tables. Editing one opens a form per entry; an entry
   that is cited cannot be deleted, and the dead control names the fields holding it, each a
-  jump there.
+  jump there. While the editors are showing, all six are listed even where the document holds
+  fewer — `<!ELEMENT QMRF (QMRF_chapters,Catalogs)>` requires the block, so a file missing a
+  catalog is short of the schema rather than exempt from it, and its Add writes the missing
+  `Catalogs`/`*_catalog` element in the position the DTD declares. A read-only viewer lists
+  only what the document holds, so no row leads nowhere.
+- **Print / PDF** in the header: the report as an A4 dossier — the cover block of document
+  identity, chapters under grey title bands, the six catalogs as an annex on their own page,
+  attachments as a named list — and nothing of the app's own chrome. See
+  [Printing](#printing) for what the dialog has to be set to.
 - A field's stored HTML is sanitised before it is *stored* as well as before it is shown, so
   what the editor saves is what this viewer would render.
 
@@ -109,6 +117,45 @@ Standalone URL parameters (parsed only in `src/App.jsx`):
 | `?url=…` | fetch and open this QMRF document on load |
 | `?mode=edit` | start editable instead of read-only |
 | `?token=…` | bearer token for the fetch above |
+
+Editing is `?mode=edit` (or the **Edit** button, once the host allows writing). Without it the
+viewer is read-only and offers no controls at all, which is what a reader of a shared link wants
+and what surprises whoever arrived to change the file.
+
+## Printing
+
+A QMRF is filed as paper as often as it is filed as XML — the printed report is what a dossier
+attaches — so **Print / PDF** in the header is a first-class export beside Save. It switches the
+report to its read view first, and then asks the browser to print: an editing form is not a filed
+document, and in the edit view the catalogs are entry forms rather than tables. "Save as PDF" in
+that dialog is what produces the attachment.
+
+What comes out is upstream's `QMRF_xml2pdf.java` in CSS — A4 with the same margins, 10 pt body
+text, chapter titles in bold Times on a grey band, the model's identity as a cover block, tables
+that repeat their header row across a page break, attachments as a named list with their URLs, and
+the six catalogs as an annex on a page of their own. The app's own warnings are not printed: no
+banner, no findings list, no validation chip, because the report is the file rather than this app's
+opinion of it.
+
+Two settings belong to the browser rather than to the app:
+
+- **Page numbers** come from the dialog's *Headers and footers* option. CSS page margin boxes are
+  unsupported in Chrome, so no stylesheet can put a number on the page; the same option adds the
+  date and the source, which is what a working copy wants anyway.
+- **Margins** must stay on *Default* for the geometry below to apply — *None* or *Minimum*
+  overrides it — and *Background graphics* must stay on or the grey chapter bands print white.
+
+An embedded viewer prints the same report but leaves the page geometry to its host: a `@page` rule
+has no selector, so setting A4 and 80 pt of left margin from a component stylesheet would be laying
+out the host's whole document. A host that wants them adds the rule itself:
+
+```css
+/* The geometry of `new Document(PageSize.A4, 80, 50, 30, 65)`, in top/right/bottom/left order. */
+@page {
+  size: A4;
+  margin: 30pt 50pt 65pt 80pt;
+}
+```
 
 ## Commands
 

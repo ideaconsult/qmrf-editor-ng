@@ -4,7 +4,7 @@ import Header from '../components/Header.jsx'
 import ReportView from '../components/ReportView.jsx'
 import { EditorProvider, useEditor } from '../context/EditorContext.jsx'
 import { ViewerConfigProvider } from '../context/ViewerConfig.jsx'
-import { saveModel } from '../qmrf/model.js'
+import { openModel, saveModel } from '../qmrf/model.js'
 import fixture from './fixtures/qmrf-0.9-real.xml?raw'
 
 /**
@@ -332,14 +332,18 @@ describe('removing an entry that is cited', () => {
 })
 
 describe('a document whose catalog block is missing one', () => {
-  it('shows no table for it and says what the pointers are pointing at', () => {
-    // The authors catalog gone, while chapters 2.2 and 2.5 still name six people: the failure has to
-    // be visible at the pointer, since there is no table left to fix it in.
+  it('offers the missing catalog anyway, and writes it back when an entry arrives', () => {
+    // The authors catalog gone, while chapters 2.2 and 2.5 still name six people. The failure is
+    // still said at the pointer — there is no table left to fix it in — but it is no longer the only
+    // place the reader can act: Authors is listed with a working Add, and that Add writes the
+    // element the file skipped.
     const xml = fixture.replace(/<authors_catalog>[\s\S]*?<\/authors_catalog>/, '')
     render(<Harness xml={xml} />)
     editOn()
-    expect(() => catalogBlock(AUTHORS)).toThrow('the report has nothing at')
-    expect(document.querySelectorAll('.qmrf-catalog')).toHaveLength(5)
+    expect(document.querySelectorAll('.qmrf-catalog')).toHaveLength(6)
+    expect(entryRows(AUTHORS)).toHaveLength(0)
+    expect(saved()).not.toContain('<authors_catalog>')
+    expect(within(catalogBlock(AUTHORS)).getByRole('button', { name: 'Add author' })).toBeEnabled()
 
     const field = document.querySelector(
       '[data-qmrf-path="QMRF_chapters[0]/QSAR_General_information[0]/qmrf_authors[0]"]'
@@ -348,8 +352,94 @@ describe('a document whose catalog block is missing one', () => {
     expect(field.textContent).toContain('not in the catalog')
     // The five catalogs that are there are still editable.
     expect(entryRows(SOFTWARE)).toHaveLength(3)
-    expect(
-      within(catalogBlock(SOFTWARE)).getByRole('button', { name: 'Add software' })
-    ).toBeEnabled()
+
+    fireEvent.click(within(catalogBlock(AUTHORS)).getByRole('button', { name: 'Add author' }))
+    expect(saved()).toContain('<authors_catalog>')
+    expect(entryRows(AUTHORS)).toHaveLength(1)
+    // One step back takes the catalog element away with the entry, rather than leaving an empty
+    // `<authors_catalog/>` the reader never asked to create.
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }))
+    expect(saved()).not.toContain('<authors_catalog>')
+    expect(entryRows(AUTHORS)).toHaveLength(0)
+  })
+})
+
+describe('a document with no catalog block at all', () => {
+  // `<!ELEMENT QMRF (QMRF_chapters,Catalogs)>` requires the block, so a file without one is short of
+  // the schema rather than exempt from it — and a viewer that only ever shows catalogs it finds would
+  // leave such a document permanently unfixable, which is how a real one arrived here.
+  const withoutCatalogs = fixture.replace(/\s*<Catalogs>[\s\S]*?<\/Catalogs>/, '')
+
+  it('shows a reader no appendix and an editor all six catalogs', () => {
+    expect(withoutCatalogs).not.toContain('<Catalogs>')
+    render(<Harness xml={withoutCatalogs} />)
+    expect(document.querySelector('.qmrf-catalogs')).toBeNull()
+    expect(document.querySelectorAll('.qmrf-catalog')).toHaveLength(0)
+
+    editOn()
+    expect(document.querySelector('.qmrf-catalogs')).not.toBeNull()
+    expect(document.querySelectorAll('.qmrf-catalog')).toHaveLength(6)
+    // Every one of them ready to take an entry, in a document that has nowhere to put one yet.
+    // Searched for inside each catalog: chapter 3.2 has an "Add endpoint" of its own, which is a
+    // vocabulary picker citing this catalog rather than the catalog's own add.
+    /** @type {[string, string][]} */
+    const adds = [
+      [SOFTWARE, 'Add software'],
+      [ALGORITHMS, 'Add algorithm'],
+      [DESCRIPTORS, 'Add descriptor'],
+      [ENDPOINTS, 'Add endpoint'],
+      [PUBLICATIONS, 'Add publication'],
+      [AUTHORS, 'Add author']
+    ]
+    for (const [address, name] of adds)
+      expect(within(catalogBlock(address)).getByRole('button', { name })).toBeEnabled()
+    expect(saved()).not.toContain('<Catalogs>')
+  })
+
+  it('writes the block where the schema puts it, and takes it all back in one step', () => {
+    render(<Harness xml={withoutCatalogs} />)
+    editOn()
+
+    fireEvent.click(
+      within(catalogBlock(PUBLICATIONS)).getByRole('button', { name: 'Add publication' })
+    )
+    let bytes = saved()
+    expect(bytes).toContain('<Catalogs>')
+    // The block belongs after the chapters, which is where `insertOccurrence` puts it from the DTD's
+    // own sequence rather than from an appendChild that would validate nowhere.
+    expect(bytes.indexOf('<Catalogs>')).toBeGreaterThan(bytes.indexOf('</QMRF_chapters>'))
+    expect(bytes).toContain('<publications_catalog>')
+    expect(bytes).toContain('id="publications_catalog_1"')
+    expect(entryRows(PUBLICATIONS)).toHaveLength(1)
+
+    // A second catalog the file never had arrives in the schema's slot, not after the first added.
+    fireEvent.click(within(catalogBlock(SOFTWARE)).getByRole('button', { name: 'Add software' }))
+    bytes = saved()
+    expect(bytes.indexOf('<software_catalog>')).toBeLessThan(
+      bytes.indexOf('<publications_catalog>')
+    )
+    expect(bytes).toContain('id="software_catalog_1"')
+
+    // The two adds are two steps, and neither leaves a stray block behind on the way back.
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }))
+    expect(saved()).not.toContain('<software_catalog>')
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }))
+    expect(saved()).not.toContain('<Catalogs>')
+    expect(document.querySelector('.qmrf-catalogs')).not.toBeNull()
+  })
+
+  it('leaves the rest of the file exactly as it was', () => {
+    render(<Harness xml={withoutCatalogs} />)
+    editOn()
+    fireEvent.click(
+      within(catalogBlock(DESCRIPTORS)).getByRole('button', { name: 'Add descriptor' })
+    )
+    const bytes = saved()
+    // The fidelity rules still apply to a document this app had to complete: every date shape and
+    // the declared version survive the write, and what comes back in is what goes out again.
+    expect(bytes).toContain('20.06.2009')
+    expect(bytes).toContain(`2009${String.fromCharCode(47)}12${String.fromCharCode(47)}03`)
+    expect(bytes).toContain('schema_version="0.9"')
+    expect(saveModel(openModel(bytes))).toBe(bytes)
   })
 })

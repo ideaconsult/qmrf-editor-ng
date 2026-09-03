@@ -1,3 +1,4 @@
+import { flushSync } from 'react-dom'
 import { useEditor } from '../context/EditorContext.jsx'
 import { useViewerConfig } from '../context/ViewerConfig.jsx'
 import { suggestedFilename } from '../qmrf/io.js'
@@ -17,6 +18,16 @@ export default function Header() {
   const { readOnly, onSave } = useViewerConfig()
   const canWrite = !readOnly || Boolean(onSave)
   const label = doc.model ? suggestedFilename(doc.model) : ''
+
+  // What goes on paper is the report, not the form: in the edit view the catalogs are entry forms
+  // rather than tables, and no control is part of a filed document. The switch has to be in the DOM
+  // before `print()` reads the page — a plain `setState` is still queued when the next line runs,
+  // which is the whole reason for `flushSync` here. The mode stays on View afterwards, so what the
+  // reader sees is what came out of the printer.
+  const print = () => {
+    flushSync(() => setEditing(false))
+    window.print()
+  }
 
   return (
     <header className="qmrf-header">
@@ -67,6 +78,7 @@ export default function Header() {
         onOpenFile={doc.openFile}
         onCreate={readOnly ? undefined : doc.create}
         onSave={canWrite ? doc.save : undefined}
+        onPrint={print}
         dirty={doc.dirty}
         label={label}
       />

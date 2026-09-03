@@ -120,15 +120,20 @@ export function mintId(/** @type {Model} */ model, /** @type {string} */ catalog
 }
 
 /**
- * Append one entry to a catalog.
+ * Append one entry to a catalog, building whatever the document is missing on the way there.
  *
  * Attributes are written in the DTD's declared order rather than the caller's, so a generated entry
  * reads like one the Java editor wrote; the id is always written, and a value nobody filled in is
  * left out rather than written empty.
  *
- * A document whose catalog block is missing altogether gets `null`: inventing a `Catalogs` child
- * would make the writer emit structure the schema's own sequence may not allow at that position, so
- * the caller says "this document has nowhere to put that" instead.
+ * A document with no `Catalogs` block, or with only two of the six catalogs in it, is not a document
+ * that cannot have a publication — `<!ELEMENT QMRF (QMRF_chapters,Catalogs)>` *requires* the block,
+ * so a file that omits one is short of the schema rather than exempt from it, and the validator says
+ * so. Refusing there would strand the whole editor: no appendix, no sidebar row, and no Add on any of
+ * the chapter fields that mint entries, which is how a real document arrived in the state where
+ * nothing could be added at all. So the missing `Catalogs` and the missing `*_catalog` are created,
+ * through the same `insertOccurrence` that positions a repeated chapter, at the position the DTD's
+ * own sequence puts them. A `null` now means only "that is not one of the six catalogs".
  *
  * @param {Model} model
  * @param {string} catalogName
@@ -142,13 +147,15 @@ export function addEntry(
 ) {
   const shape = catalogShape(catalogName)
   const path = catalogPath(catalogName)
-  if (!shape || !path || !elementAt(model, path)) return null
-  const inserted = insertOccurrence(model, path, shape.entryElement)
+  if (!shape || !path) return null
+  const room = ensureCatalog(model, path)
+  if (!room) return null
+  const inserted = insertOccurrence(room, path, shape.entryElement)
   if (!inserted) return null
 
   const declared = new Set((ELEMENTS[shape.entryElement]?.dataAttrs ?? []).map((a) => a.name))
   const wanted = { ...attrs }
-  if (!wanted[shape.idAttr]) wanted[shape.idAttr] = mintId(model, catalogName)
+  if (!wanted[shape.idAttr]) wanted[shape.idAttr] = mintId(room, catalogName)
   let next = inserted.model
   for (const spec of ELEMENTS[shape.entryElement]?.dataAttrs ?? []) {
     const value = wanted[spec.name]
@@ -156,6 +163,35 @@ export function addEntry(
     next = setAttr(next, inserted.path, spec.name, value)
   }
   return { model: next, path: inserted.path, id: wanted[shape.idAttr] ?? '' }
+}
+
+/**
+ * The model with this catalog present, creating the `Catalogs` block and the `*_catalog` element if
+ * the document is short of them.
+ *
+ * Both are one `insertOccurrence` each, whose anchor rule already knows where the DTD puts them:
+ * `Catalogs` runs after the last `QMRF_chapters`, a `publications_catalog` after the last catalog the
+ * schema declares before it. Nothing here chooses a position, which is the point — a hand-picked
+ * `appendChild` is how a generated document stops validating.
+ *
+ * @param {Model} model
+ * @param {Path} path as `catalogPath` returns it: the block step, then the catalog step
+ * @returns {Model|null} null only when the document has no root to write into
+ */
+function ensureCatalog(/** @type {Model} */ model, /** @type {Path} */ path) {
+  const block = /** @type {import('./model.js').Step} */ (path[0])
+  const catalog = /** @type {import('./model.js').Step} */ (path[1])
+  if (!elementAt(model, [block])) {
+    const made = insertOccurrence(model, [], block.name)
+    if (!made) return null
+    model = made.model
+  }
+  if (!elementAt(model, path)) {
+    const made = insertOccurrence(model, [block], catalog.name)
+    if (!made) return null
+    model = made.model
+  }
+  return model
 }
 
 /** @typedef {{address: string, label: string}} Citation */

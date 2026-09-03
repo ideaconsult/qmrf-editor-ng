@@ -111,14 +111,55 @@ describe('adding an entry', () => {
     expect(validate(added.model).counts.error).toBe(validate(model).counts.error)
   })
 
-  it('refuses when the document has nowhere to put it', () => {
-    // A `Catalogs` block with no matching catalog is repaired by the catalog table itself, not by
-    // inventing a child here: the schema's sequence decides what may sit where, and that is not this
-    // module's call. The caller says "this document has nowhere to put that" instead.
+  it('builds the catalog element the document skipped', () => {
+    // A `Catalogs` block that holds none of the six is the common real case — a file trimmed down to
+    // the catalogs someone happened to need. Refusing there left the whole editor with nowhere to
+    // mint an entry, from the appendix table down to the picker in chapter 1.3.
     const bare = openModel('<?xml version="1.0"?><QMRF><QMRF_chapters/><Catalogs/></QMRF>')
-    expect(addEntry(bare, 'endpoints_catalog', { name: 'nowhere' })).toBeNull()
+    const added = addEntry(bare, 'endpoints_catalog', { name: 'Somewhere' })
+    if (!added) throw new Error('an empty catalog block refused an entry')
+    expect(formatPath(added.path)).toBe('Catalogs[0]/endpoints_catalog[0]/endpoint[0]')
+    expect(saveModel(added.model)).toContain(
+      '<Catalogs><endpoints_catalog><endpoint id="endpoints_catalog_1" name="Somewhere"/></endpoints_catalog></Catalogs>'
+    )
+    expect(catalogEntries(added.model, 'endpoints_catalog')).toHaveLength(1)
     expect(catalogEntries(bare, 'endpoints_catalog')).toEqual([])
     expect(mintId(bare, 'endpoints_catalog')).toBe('endpoints_catalog_1')
+  })
+
+  it('builds the Catalogs block itself, where the schema puts it', () => {
+    const noBlock = openModel('<?xml version="1.0"?><QMRF><QMRF_chapters/></QMRF>')
+    // The validator already said so: the block is required, so a document without one is short of
+    // the schema rather than exempt from it.
+    expect(
+      validate(noBlock).issues.filter((issue) => issue.message.includes('<Catalogs>'))
+    ).toHaveLength(1)
+
+    const first = addEntry(noBlock, 'publications_catalog', { title: 'A study' })
+    if (!first) throw new Error('a document with no Catalogs block refused an entry')
+    expect(formatPath(first.path)).toBe('Catalogs[0]/publications_catalog[0]/publication[0]')
+    const bytes = saveModel(first.model)
+    expect(bytes.indexOf('<Catalogs>')).toBeGreaterThan(bytes.indexOf('</QMRF_chapters>'))
+    expect(bytes).toContain('id="publications_catalog_1" title="A study"')
+
+    // A second catalog the file never had arrives in the slot the DTD declares for it — before the
+    // publications one — rather than after whatever happens to exist.
+    const second = addEntry(first.model, 'software_catalog', { name: 'Toxtree' })
+    if (!second) throw new Error('the second catalog refused an entry')
+    const both = saveModel(second.model)
+    expect(both.indexOf('<software_catalog>')).toBeLessThan(both.indexOf('<publications_catalog>'))
+    expect(
+      validate(second.model).issues.filter((issue) => issue.message.includes('<Catalogs>'))
+    ).toHaveLength(0)
+
+    // The models this grew out of are untouched, which is what an undo step needs them to be.
+    expect(saveModel(noBlock)).toBe('<?xml version="1.0"?><QMRF><QMRF_chapters/></QMRF>')
+    expect(saveModel(first.model)).toBe(bytes)
+  })
+
+  it('refuses a name that is not one of the six catalogs', () => {
+    expect(addEntry(model, 'made_up_catalog')).toBeNull()
+    expect(addEntry(model, 'made_up_catalog', { name: 'anything' })).toBeNull()
   })
 
   it('keeps a vocabulary id when the caller brings one', () => {
