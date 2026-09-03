@@ -89,24 +89,24 @@ requires a `@testing-library/dom` peer; and `.qwen/` is gitignored so Biome's VC
 
 ### Domain, verified
 
-QMRF = **(Q)SAR Model Reporting Format** (JRC/eNanoMapper): one document describing one predictive model against the 5 OECD principles. No spectra, no peaks, no JCAMP-DX. It is simultaneously a **viewer** (render an existing document readably) and an **editor** (local edits, valid XML out).
+QMRF = **(Q)SAR Model Reporting Format** (JRC/eNanoMapper): one document describing one predictive model against the 5 OECD principles. It is simultaneously a **viewer** (render an existing document readably) and an **editor** (local edits, valid XML out).
 
-Authoritative schema: `C:\nina\src\git_idea\qmrf\schema\3.0.0\qmrf.dtd` — read in full (383 lines). `schema/1.0` and `schema/1.1` also exist; we target **3.0.0** only. The `qmrf.xsd` under `qmrf-editor\qmrf-swing\...\resources` is a **0-byte placeholder**.
+Authoritative schema: `qmrf/schema/3.0.0/qmrf.dtd` from the upstream Java project (`git clone git://git.code.sf.net/p/qmrf/git qmrf-git`; docs at <https://qmrf.sourceforge.net/>) — read in full (383 lines). `qmrf/schema/1.0` and `qmrf/schema/1.1` also exist; we target **3.0.0** only. The `qmrf.xsd` under `qmrf-swing/.../resources` is a **0-byte placeholder**.
 
 The shape is small, fixed and regular, which is what makes this tractable:
 
 - Root `QMRF` + 8 `#FIXED` attributes → constants, not inputs.
 - `QMRF_chapters` = **10 chapters in a strict sequence** (1 identifier, 2 general info, 3 endpoint/P1, 4 algorithm/P2, 5 applicability domain/P3, 6 internal validation/P4, 7 external validation/P4, 8 mechanistic interpretation/P5, 9 miscellaneous, 10 JRC summary).
-- `Catalogs` = **6 ID-bearing catalogs** (`software`, `algorithms`, `descriptors`, `endpoints`, `authors`, `publications`), referenced from chapters via `<x_ref idref="…" catalog="…">`.
+- `Catalogs` = **6 ID-bearing catalogs**, in the DTD's own sequence (`software`, `algorithms`, `descriptors`, `endpoints`, `publications`, `authors`; this line had the last two swapped until M7's `addEntry` had to create a missing catalog at the position the sequence declares), referenced from chapters via `<x_ref idref="…" catalog="…">`.
 - Every field element carries `chapter` + human-readable `name` as `#FIXED` attributes → **the DTD is also the form/report metadata**, so labels and numbering are generated, never hand-written.
 - Chapters 5 and 7 are repeatable (`+`) → add/remove blocks.
 - Enums live in attribute value sets: `answer (Yes|No)`, `answer (All|Some|No|Unknown)`, and the 7-flag sets (`chemname/cas/smiles/inchi/mol/formula/nanomaterial`) in 6.2 / 7.2.
 
-Field kinds reduce to **five**, matching the Java subchapter classes in `qmrf-swing\src\main\java\net\idea\ambit\qmrf\chapters\` (`QMRFSubChapterText`, `…Date`, `…Question`, `…Reference`, `QMRFSubchapterAlgorithm`, `…Dataset`), each with a matching Swing editor → five React field components cover all ~60 fields in both view and edit mode.
+Field kinds reduce to **five**, matching the Java subchapter classes in `qmrf-swing/src/main/java/net/idea/ambit/qmrf/chapters/` (`QMRFSubChapterText`, `…Date`, `…Question`, `…Reference`, `QMRFSubchapterAlgorithm`, `…Dataset`), each with a matching Swing editor → five React field components cover all ~60 fields in both view and edit mode.
 
 > **Corrected in M1: the kinds are eight.** Of the 61 chapter-level fields, `gen-spec.mjs` counts `text` 38 / `reference` 9 / `question` 8 / `date` 4 / `algorithm` 1 / `group` 1. The remaining eight fields nest below: `attachment` (3) only inside the 9.3 group, and `entry` (4 — `algorithm_ref`, `molecules` ×2, `document`) for elements whose content model is attributes with no PCDATA at all. So seven React field components plus a repeat-group container, not five. Note that the spec's `text` flag means "`#PCDATA`", which 50 chapter fields are (all `question` and `date` fields too, whose answers ride on attributes) — dispatch on `kind`. `src/tests/qmrf/spec.test.js` pins these counts, and `pnpm gen:spec -- --check` keeps the whole spec byte-tied to the DTD.
 
-Two fidelity constraints, both observed in the one real fixture `qmrf-swing\src\test\resources\net\idea\ambit\qmrf\QMRF-NEW.xml` (578 lines, a genuine fish acute-toxicity model):
+Two fidelity constraints, both observed in the one real fixture `qmrf-swing/src/test/resources/net/idea/ambit/qmrf/QMRF-NEW.xml` (578 lines, a genuine fish acute-toxicity model):
 
 1. Text fields store **HTML serialized as escaped PCDATA** (`&lt;html&gt;&lt;head&gt;…&lt;p style="margin-top: 0"&gt;…`). Viewing must render that sanitized; editing must write the same envelope back.
 2. That document declares `schema_version="0.9"` and `<!DOCTYPE QMRF SYSTEM "/WEB-INF/xslt/qmrf.dtd">`, while the DTD fixes `1.0`/`3.0` and `QMRFObject.java` says `1.2`. Upstream parses with `setValidating(false)` and writes `DOCTYPE_PUBLIC`/`DOCTYPE_SYSTEM`, so parsing must be **tolerant** and validation must be ours (browsers cannot DTD-validate anyway).

@@ -7,29 +7,25 @@ five OECD principles. This repo is a React rewrite of the Java
 [QMRF Editor](https://sourceforge.net/p/qmrf/git/ci/master/tree/qmrf-editor/). See
 [README.md](./README.md) for usage and [docs/PLAN.md](./docs/PLAN.md) for the approved plan.
 
-## What This Project Is Not
-
-- **Not a spectra tool.** QMRF carries no spectra, no peak lists and no JCAMP-DX. Any
-  peak/spectrum/JCAMP code is out of scope; the upstream Java app has none of it either.
-- **Not only a viewer.** It must render an existing QMRF document readably *and* edit it
-  locally with valid XML output. Viewing is a first-class requirement, not a fallback mode.
-- **Not bound to SpectraSearch yet.** See [SpectraSearch Integration](#spectrasearch-integration).
 
 ## Sources Of Truth
 
-- `vendor/qmrf.dtd` — the authoritative schema (QMRF 3.0.0, from
-  `C:\nina\src\git_idea\qmrf\schema\3.0.0\qmrf.dtd`). Field labels, chapter numbering,
+- `vendor/qmrf.dtd` — the authoritative schema (QMRF 3.0.0, from the upstream project's
+  `qmrf/schema/3.0.0/qmrf.dtd`). Field labels, chapter numbering,
   cardinality and enums all derive from it. **Never hand-write a field label or chapter
   number**: regenerate with `pnpm gen:spec`.
 - `src/qmrf/spec.js` — generated field metadata. Committed; CI fails if it drifts from the
   vendored DTD (`pnpm gen:spec -- --check`). It is excluded from Biome in `biome.json`:
   formatting a `JSON.stringify` payload would rewrite it and break that byte comparison.
-- The Java reference implementation, for parity questions only:
-  - model + DOM handling: `qmrf-swing\src\main\java\net\idea\ambit\qmrf\QMRFObject.java`
-  - field kinds: `qmrf-swing\...\chapters\QMRFSubChapter*.java`
-  - catalogs: `qmrf-swing\...\catalogs\Catalog*.java`
-  - new-document template: `qmrf-core\src\main\resources\ambit2\qmrfeditor\qmrf.xml`
-  - endpoint vocabulary: `qmrf-core\src\main\resources\ambit2\qmrfeditor\endpoints\`
+- The Java reference implementation, for parity questions only. Source:
+  `git clone git://git.code.sf.net/p/qmrf/git qmrf-git` (or browse it at
+  <https://sourceforge.net/p/qmrf/git/>); general documentation at
+  <https://qmrf.sourceforge.net/>. Paths below are relative to that repository's root:
+  - model + DOM handling: `qmrf-swing/src/main/java/net/idea/ambit/qmrf/QMRFObject.java`
+  - field kinds: `qmrf-swing/.../chapters/QMRFSubChapter*.java`
+  - catalogs: `qmrf-swing/.../catalogs/Catalog*.java`
+  - new-document template: `qmrf-core/src/main/resources/ambit2/qmrfeditor/qmrf.xml`
+  - endpoint vocabulary: `qmrf-core/src/main/resources/ambit2/qmrfeditor/endpoints/`
 - Convention references (structure/CI/packaging, not domain): `jtoxkit-react` and
   `qubounds-viewer`.
 
@@ -41,8 +37,9 @@ Root `QMRF` (8 `#FIXED` attributes = constants, not inputs) contains:
   2 general information, 3 endpoint (P1), 4 algorithm (P2), 5 applicability domain (P3),
   6 internal validation (P4), 7 external validation (P4), 8 mechanistic interpretation
   (P5), 9 miscellaneous, 10 JRC summary. Chapters 5 and 7 are **repeatable**.
-- `Catalogs` — **6 ID-bearing catalogs** (`software`, `algorithms`, `descriptors`,
-  `endpoints`, `authors`, `publications`), referenced from chapters through
+- `Catalogs` — **6 ID-bearing catalogs**, in the sequence the DTD declares and `addEntry`
+  therefore creates them in (`software`, `algorithms`, `descriptors`, `endpoints`,
+  `publications`, `authors`), referenced from chapters through
   `<x_ref idref="…" catalog="…">`. ID/IDREF integrity is a hard invariant.
 
 Field kinds reduce to **eight** — `text`, `reference`, `question`, `date`, `algorithm`, `group`,
@@ -362,7 +359,8 @@ filters a run (`pnpm test -- <name>` passes the `--` through as a filter, which 
   stylesheet is the shipped route, and it is the one the user can check before pressing the button.
 - Ontology-term lookup (upstream `qmrf-annotation`); `ontology_term` stays free text.
 - PMML — `qmrf-pmml` is commented out of the upstream root `pom.xml`, i.e. dead.
-- Schema versions 1.0 / 1.1 (`schema/1.0/qmrf.dtd`, `schema/1.1/qmrf.dtd` exist on disk).
+- Schema versions 1.0 / 1.1 (`qmrf/schema/1.0/qmrf.dtd` and `qmrf/schema/1.1/qmrf.dtd` in
+  the upstream repository).
 
 ## Licensing Caveat (open question)
 
@@ -379,7 +377,7 @@ the Solr result `type`; `kind: "route"` embeds a React component (receives the O
 and `apiBase` as props) and `kind: "external"` is a URL template opened in a new tab.
 An editor must be `kind: "route"` — external links get no token and cannot save.
 
-Blocker: `spectrasearch\src` contains **zero** `qmrf`/`qsar` references and no QSAR-model
+Blocker: `spectrasearch/src` contains **zero** `qmrf`/`qsar` references and no QSAR-model
 result type, so the type must first be emitted by the indexing pipeline. Adding the viewer
 itself is then: a `kind: "route"` entry in `src/viewers.js`, a page under `src/pages/`, a
 route in `main.jsx`, and host-side `resolve.dedupe: ['react','react-dom']` plus
@@ -387,22 +385,18 @@ route in `main.jsx`, and host-side `resolve.dedupe: ['react','react-dom']` plus
 
 ## Original Brief
 
-Verbatim from the repository's first `AGENTS.md`, kept for provenance:
+From the repository's first `AGENTS.md`, kept for provenance (local checkout paths removed):
 
 > This repo should create React version of QMRF Editor, originally Java app
 > https://sourceforge.net/p/qmrf/git/ci/master/tree/qmrf-editor/
 >
-> local copy C:\\nina\\src\\git\_idea\\qmrf\\qmrf-editor
->
 > It works with well defined XML schema and provides user interface to such.
 >
-> It should follow the viewers convention of https://github.com/ideaconsult/jtoxkit-react
-> (local C:\\nina\\src\\git\_idea\\jtoxkit-react) and
-> https://github.com/ideaconsult/qubounds-viewer (local C:\\nina\\src\\git\_idea\\qubounds-viewer)
-> so that it could be integrated as external viewer in
-> https://github.com/h2020charisma/spectrasearch (local C:\\nina\\src\\charisma\\spectrasearch)
+> It should follow the viewers convention of https://github.com/ideaconsult/jtoxkit-react and
+> https://github.com/ideaconsult/qubounds-viewer so that it could be integrated as external
+> viewer in https://github.com/h2020charisma/spectrasearch
 
 Corrections established during planning, which override the brief above: QMRF is a (Q)SAR
-**model** format, so spectra/peaks/JCAMP-DX are irrelevant; the app is hooked per **entry
-type** (a QSAR model entry), not for arbitrary items; and the upstream editor contains no
-viewer, while **this** app must serve as a viewer as well as an editor.
+**model**-documentation format; the app is hooked per **entry type** (a QSAR model entry), not
+for arbitrary items; and the upstream editor contains no viewer, while **this** app must serve
+as a viewer as well as an editor.

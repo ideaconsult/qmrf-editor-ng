@@ -15,8 +15,7 @@ It follows the packaging and embedding conventions of
 [`@ideaconsult/jtoxkit-react`](https://github.com/ideaconsult/jtoxkit-react) and
 [`@ideaconsult/qubounds-viewer`](https://github.com/ideaconsult/qubounds-viewer), so it can
 later be registered as a route viewer in
-[SpectraSearch](https://github.com/h2020charisma/spectrasearch). QMRF documents carry no
-spectra, peaks or JCAMP-DX data — this is a model-documentation format, not a spectral one.
+[SpectraSearch](https://github.com/h2020charisma/spectrasearch).
 
 ## Install
 
